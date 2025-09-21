@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en" class="h-full" data-theme="light">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TaskFlow — Dashboard</title>
+    <!-- Tailwind via CDN for simplicity -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+
+<body class="h-full bg-gray-50 text-gray-900 antialiased dark:bg-gray-950 dark:text-gray-100">
+    <!-- App Container -->
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside id="sidebar"
+            class="hidden lg:flex lg:flex-col w-72 shrink-0 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+            <div class="flex items-center gap-3 px-6 h-16 border-b border-gray-200 dark:border-gray-800">
+                <button id="closeSidebar" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                    aria-label="Close sidebar">✖️</button>
+                <div class="w-9 h-9 rounded-xl bg-brand-600 text-white grid place-items-center font-bold shadow-soft">TF
+                </div>
+                <div>
+                    <h1 class="text-lg font-semibold">TaskFlow</h1>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Your daily command center</p>
+                </div>
+            </div>
+
+            <nav class="p-4 space-y-2 overflow-y-auto">
+                <a href="#" data-nav="dashboard"
+                    class="nav-link flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-brand-50 dark:hover:bg-gray-800">
+                    <span>🏠</span><span class="font-mum">Dashboard</span>
+                </a>
+                <a href="#" data-nav="tasks"
+                    class="nav-link flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-brand-50 dark:hover:bg-gray-800">
+                    <span>🗂️</span><span class="font-medium">All Tasks</span>
+                    <span id="countAll"
+                        class="ml-auto text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800">0</span>
+                </a>
+                <a href="#" data-nav="kanban"
+                    class="nav-link flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-brand-50 dark:hover:bg-gray-800">
+                    <span>🧩</span><span class="font-medium">Kanban</span>
+                </a>
+                <a href="#" data-nav="calendar"
+                    class="nav-link flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-brand-50 dark:hover:bg-gray-800">
+                    <span>🗓️</span><span class="font-medium">Calendar</span>
+                </a>
+                <a href="#" data-nav="categories"
+                    class="nav-link flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-brand-50 dark:hover:bg-gray-800">
+                    <span>🏷️</span><span class="font-medium">Categories</span>
+                </a>
+                <a href="#" data-nav="settings"
+                    class="nav-link flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-brand-50 dark:hover:bg-gray-800">
+                    <span>⚙️</span><span class="font-medium">Settings</span>
+                </a>
+            </nav>
+
+            <div class="mt-auto p-4 border-t border-gray-200 dark:border-gray-800">
+                <div class="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 dark:bg-gray-800">
+                    <img src="https://i.pravatar.cc/100?img=12" alt="User" class="w-10 h-10 rounded-full" />
+                    <div class="min-w-0">
+                        <p class="font-semibold truncate" id="userName">Alex Johnson</p>
+                        <p class="text-xs text-gray-500 truncate" id="userEmail">alex@example.com</p>
+                    </div>
+                    <button id="logoutBtn"
+                        class="ml-auto text-sm px-3 py-1 rounded-lg bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600">Logout</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <div class="flex-1 flex flex-col min-w-0">
+            <!-- Topbar -->
+            <header
+                class="flex items-center gap-3 h-16 px-4 md:px-6 border-b border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 backdrop">
+                <button id="openSidebar" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                    aria-label="Open sidebar">☰</button>
+                <div
+                    class="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 w-full max-w-lg">
+                    <span>🔎</span>
+                    <input id="searchInput" type="search" class="w-full bg-transparent outline-none"
+                        placeholder="Search tasks, tags, #id… (press /)" />
+                    <kbd class="text-xs text-gray-500">/</kbd>
+                </div>
+                <div class="ml-auto flex items-center gap-2">
+                    <button id="newTaskBtn"
+                        class="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-brand-600 text-white hover:bg-brand-700 shadow-soft"
+                        data-tip="New task (N)">➕ New Task</button>
+                    <button id="newCategoryBtn"
+                        class="hidden md:inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-gray-800"
+                        data-tip="Add category">🏷️ Category</button>
+                    <button id="notifBtn" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                        aria-label="Notifications">🔔</button>
+                    <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                        aria-label="Toggle dark mode" data-tip="Dark mode (D)">🌙</button>
+                </div>
+            </header>
+
+            <!-- Content Switcher -->
+            <main id="route-dashboard" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+                <!-- Stats -->
+                <section class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div
+                        class="p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-soft">
+                        <p class="text-sm text-gray-500">Due Today</p>
+                        <p id="statToday" class="mt-2 text-3xl font-semibold">0</p>
+                    </div>
+                    <div
+                        class="p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-soft">
+                        <p class="text-sm text-gray-500">Overdue</p>
+                        <p id="statOverdue" class="mt-2 text-3xl font-semibold">0</p>
+                    </div>
+                    <div
+                        class="p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-soft">
+                        <p class="text-sm text-gray-500">Completed</p>
+                        <p id="statDone" class="mt-2 text-3xl font-semibold">0</p>
+                    </div>
+                    <div
+                        class="p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-soft">
+                        <p class="text-sm text-gray-500">Categories</p>
+                        <p id="statCategories" class="mt-2 text-3xl font-semibold">0</p>
+                    </div>
+                </section>
+
+                <!-- Quick Actions & Filters -->
+                <section class="flex flex-wrap items-center gap-2">
+                    <button
+                        class="px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800"
+                        id="filterAll">All</button>
+                    <button
+                        class="px-3 py-2 rounded-xl bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-800"
+                        data-filter="todo">To-do</button>
+                    <button
+                        class="px-3 py-2 rounded-xl bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-800"
+                        data-filter="in_progress">In Progress</button>
+                    <button
+                        class="px-3 py-2 rounded-xl bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-800"
+                        data-filter="review">Review</button>
+                    <button
+                        class="px-3 py-2 rounded-xl bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-800"
+                        data-filter="done">Done</button>
+                    <div class="ml-auto flex items-center gap-2">
+                        <label class="text-sm text-gray-500">Sort</label>
+                        <select id="sortSelect"
+                            class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+                            <option value="due_asc">Due ↑</option>
+                            <option value="due_desc">Due ↓</option>
+                            <option value="priority">Priority</option>
+                            <option value="status">Status</option>
+                        </select>
+                    </div>
+                </section>
+
+                <!-- Main Grid -->
+                <section class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    <!-- Task List -->
+                    <div
+                        class="xl:col-span-2 p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+                        <div class="flex items-center justify-between mb-3">
+                            <h2 class="text-lg font-semibold">Tasks</h2>
+                            <button class="px-3 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700"
+                                id="addTaskTop">Add Task</button>
+                        </div>
+                        <ul id="taskList" class="divide-y divide-gray-200 dark:divide-gray-800"></ul>
+                        <div id="emptyTasks" class="hidden text-center text-gray-500 py-10">No tasks yet. Create your
+                            first task ➕</div>
+                    </div>
+
+                    <!-- Right Column: Kanban Preview + Calendar + Notes -->
+                    <div class="space-y-6">
+                        <!-- Kanban Preview -->
+                        <div
+                            class="p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-semibold">Kanban</h3>
+                                <a href="#" data-nav="kanban" class="text-sm text-brand-600 hover:underline">Open Board
+                                    →</a>
+                            </div>
+                            <div class="grid grid-cols-4 gap-3 text-sm">
+                                <div>
+                                    <p class="text-xs text-gray-500 mb-1">To-do</p>
+                                    <ul id="kanbanTodo" class="space-y-2 min-h-[2rem]"></ul>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 mb-1">In Progress</p>
+                                    <ul id="kanbanProgress" class="space-y-2 min-h-[2rem]"></ul>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 mb-1">Review</p>
+                                    <ul id="kanbanReview" class="space-y-2 min-h-[2rem]"></ul>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 mb-1">Done</p>
+                                    <ul id="kanbanDone" class="space-y-2 min-h-[2rem]"></ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mini Calendar -->
+                        <div
+                            class="p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-semibold">Calendar</h3>
+                                <div class="space-x-2">
+                                    <button id="prevMonth"
+                                        class="px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700">◀</button>
+                                    <button id="nextMonth"
+                                        class="px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700">▶</button>
+                                </div>
+                            </div>
+                            <p id="calTitle" class="text-sm text-gray-500 mb-2"></p>
+                            <div id="calendarGrid" class="grid grid-cols-7 gap-2 text-center text-sm"></div>
+                        </div>
+
+                        <!-- Quick Notes -->
+                        <div
+                            class="p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+                            <h3 class="font-semibold mb-2">Quick Notes</h3>
+                            <textarea id="quickNotes"
+                                class="w-full h-28 p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+                                placeholder="Jot down quick ideas…"></textarea>
+                            <div class="text-right mt-2">
+                                <button id="saveNotes"
+                                    class="px-3 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Categories -->
+                <section class="p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-semibold">Categories</h3>
+                        <button id="addCategoryTop"
+                            class="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700">Add
+                            Category</button>
+                    </div>
+                    <div id="categoryGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3"></div>
+                </section>
+            </main>
+
+            <!-- Route: Kanban Full -->
+            <main id="route-kanban" class="hidden flex-1 overflow-y-auto p-4 md:p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold">Kanban Board</h2>
+                    <button data-nav="dashboard"
+                        class="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700">← Back</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="kanban-col" data-status="todo">
+                        <h4 class="font-semibold mb-2">To-do</h4>
+                        <div
+                            class="kanban-drop space-y-2 min-h-[200px] p-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+                        </div>
+                    </div>
+                    <div class="kanban-col" data-status="in_progress">
+                        <h4 class="font-semibold mb-2">In Progress</h4>
+                        <div
+                            class="kanban-drop space-y-2 min-h-[200px] p-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+                        </div>
+                    </div>
+                    <div class="kanban-col" data-status="review">
+                        <h4 class="font-semibold mb-2">Review</h4>
+                        <div
+                            class="kanban-drop space-y-2 min-h-[200px] p-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+                        </div>
+                    </div>
+                    <div class="kanban-col" data-status="done">
+                        <h4 class="font-semibold mb-2">Done</h4>
+                        <div
+                            class="kanban-drop space-y-2 min-h-[200px] p-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Other routes placeholders -->
+            <main id="route-tasks" class="hidden flex-1 p-6">Coming soon…</main>
+            <main id="route-calendar" class="hidden flex-1 p-6">Coming soon…</main>
+            <main id="route-categories" class="hidden flex-1 p-6">Coming soon…</main>
+            <main id="route-settings" class="hidden flex-1 p-6">Coming soon…</main>
+
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modalOverlay" class="hidden fixed inset-0 z-50 grid place-items-center bg-black/40 backdrop p-4"
+        aria-hidden="true"></div>
+
+    <template id="modalTemplate">
+        <div role="dialog" aria-modal="true"
+            class="w-full max-w-2xl rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-soft">
+            <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 p-4">
+                <h3 id="modalTitle" class="text-lg font-semibold">New Task</h3>
+                <button class="modal-close p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                    aria-label="Close">✖️</button>
+            </div>
+            <div class="p-4 space-y-3" id="modalBody"></div>
+            <div class="flex justify-end gap-2 p-4 border-t border-gray-200 dark:border-gray-800">
+                <button
+                    class="modal-close px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700">Cancel</button>
+                <button id="modalPrimary"
+                    class="px-4 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700">Save</button>
+            </div>
+        </div>
+    </template>
+
+    <!-- Toasts -->
+    <div id="toastStack" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+</body>
+<script type="module" src="script.js"></script>
+
+
+</html>
