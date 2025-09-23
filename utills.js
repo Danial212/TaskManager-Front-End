@@ -12,19 +12,30 @@ async function getTasks() {
 
 async function createTask(task) {
     const tasksURL = DomainURL + 'tasks/';
-    console.log("trying creating: " + JSON.stringify(task));
     const header = {
         'Content-Type': 'application/json',
     }
     const response = await authenticatedFetch(tasksURL,
-        { method: 'POST', body: JSON.stringify(task), headers: header }
+        {
+            method: 'POST',
+            body: JSON.stringify(task),
+            headers: header
+        }
     );
-    console.log(response.status);
 }
 
-async function updateTask(task) {
-    const tasksURL = DomainURL + 'tasks/';
-    const response = await authenticatedFetch(tasksURL, { method: 'PATCH' });
+async function updateTask(task, id) {
+    console.log(JSON.stringify(task));
+    const tasksURL = DomainURL + 'tasks/' + id + '/';
+    const header = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+    };
+    const response = await authenticatedFetch(tasksURL, {
+        method: 'PATCH',
+        body: JSON.stringify(task),
+        headers: header
+    });
 }
 
 async function getCategories() {
@@ -33,10 +44,27 @@ async function getCategories() {
     return (await response.json());
 }
 
-async function createCategories(task) {
-    /// must be completed ...
+async function createCategories(category) {
+    const categoryURl = DomainURL + 'categories/';
+    const header = {
+        'Content-Type': 'application/json',
+    };
+    const response = await authenticatedFetch(categoryURl, {
+        method: 'POST',
+        body: JSON.stringify(category),
+        headers: header
+    });
 }
 
-async function updateCategories(task) {
-    /// must be completed ...
+//  Must be completed
+async function updateCategories(category, id) {
+    const categoryURl = DomainURL + 'categories/' + id;
+    const header = {
+        'Content-Type': 'application/json',
+    }
+    const response = await authenticatedFetch(categoryURl, {
+        method: 'PATCH',
+        body: JSON.stringify(category),
+        headers: header
+    });
 }

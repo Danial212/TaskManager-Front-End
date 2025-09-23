@@ -25,6 +25,7 @@ tailwind.config = {
 /********************    Minimal Data Layer (localStorage)\n     
  Replace fetch/save with DRF endpoints later.\n     ********************/
 const STORAGE_KEY = 'taskflow:v1';
+//  the time duration for data catch (User, Category, Tasks)
 const STORAGE_DURATION = 5 * 60 * 1000;
 
 async function state() {
@@ -35,6 +36,12 @@ async function state() {
 
     //  Fetch fresh data from server + save into cache
     data = await fetchState();
+    saveStateIntoCache(data, Date.now())
+    return data;
+}
+
+async function fetchNewData() {
+    const data = await fetchState();
     saveStateIntoCache(data, Date.now())
     return data;
 }
@@ -88,27 +95,19 @@ const PRIORITY_BADGE = {
     low: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
 };
 
-const STATUS_LABEL = { W: 'To-do', P: 'In Progress', review: 'Review', C: 'Done' };
-function status_interpreter(word) {
-    for (const label in STATUS_LABEL) {
-        if (STATUS_LABEL[label].toLowerCase() === word.toLowerCase())
-            return label;
-    }
-    return null;
-}
-
-const PRIORITY_LABEL = { H: 'High', L: 'Low', M: 'Medium' };
-function priority_interpreter(word) {
-    for (const label in PRIORITY_LABEL) {
-        if (PRIORITY_LABEL[label].toLowerCase() === word.toLowerCase())
-            return label;
-    }
-    return null;
-}
+const STATUS_LABEL = { W: 'to-do', P: 'in_progress', C: 'done' };
+const PRIORITY_LABEL = { H: 'High', M: 'Medium', L: 'Low' };
 
 /********************\n     * Rendering\n     ********************/
 async function renderAll() {
-    const data = await state();
+    let data = null;
+    try {
+        data = await state();
+    } catch (exp) {
+        console.log(exp);
+        return;
+    }
+
     renderStats();
     renderTasks();
     renderKanbanPreview();
@@ -179,8 +178,8 @@ async function renderTasks(filter = null) {
         items = items.filter(t => t.status === filter);
     const sort = $('#sortSelect').value;
     items.sort((a, b) => {
-        if (sort === 'due_asc') return new Date(a.due) - new Date(b.due);
-        if (sort === 'due_desc') return new Date(b.due) - new Date(a.due);
+        if (sort === 'due_asc') return new Date(a.reminder) - new Date(b.reminder);
+        if (sort === 'due_desc') return new Date(b.reminder) - new Date(a.reminder);
         if (sort === 'priority') { const order = { high: 0, medium: 1, low: 2 }; return order[a.priority] - order[b.priority]; }
         if (sort === 'status') { const order = { todo: 0, in_progress: 1, review: 2, done: 3 }; return order[a.status] - order[b.status]; }
         return 0;
@@ -225,7 +224,7 @@ async function renderCalendar() {
     for (let i = 0; i < startWeekday; i++) grid.appendChild(document.createElement('div'));
     for (let d = 1; d <= last.getDate(); d++) {
         const dayDate = new Date(year, month, d, 12);
-        const count = data.tasks.filter(t => sameDay(new Date(t.due), dayDate)).length;
+        const count = data.tasks.filter(t => sameDay(new Date(t.reminder), dayDate)).length;
         const cell = document.createElement('button');
         cell.className = 'p-2 rounded-lg border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800';
         cell.innerHTML = `<div class="text-xs text-gray-500">${d}</div>${count ? `<div class='mt-1 text-xs px-2 py-0.5 rounded-full bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-200'>${count} tasks</div>` : ''}`;
@@ -264,6 +263,10 @@ function closeModal() {
 
 async function taskForm(t = {}) {
     const catOpts = (await state()).categories.map(c => `<option value="${c.id}" ${t.category === c.id ? 'selected' : ''}>${c.title}</option>`).join('');
+    const statusOpts = Object.entries(STATUS_LABEL).map(([label, value]) => `<option ${t.status === label ? 'selected' : ''} value="${label}">${value}</option>`).join('');
+    console.log(t.proirity);
+    const priorityOpts = Object.entries(PRIORITY_LABEL).map(([label, value]) => `<option ${t.proirity === label ? 'selected' : ''} value="${label}">${value}</option>`).join('');
+
     return `
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
@@ -272,24 +275,15 @@ async function taskForm(t = {}) {
           </div>
           <div>
             <label class="text-sm text-gray-500">Due Date</label>
-            <input id="f-due" type="date" class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900" value="${t.due ? new Date(t.due).toISOString().slice(0, 10) : ''}"/>
+            <input id="f-due" type="date" class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900" value="${t.reminder ? new Date(t.reminder).toISOString().slice(0, 10) : ''}"/>
           </div>
           <div>
             <label class="text-sm text-gray-500">Priority</label>
-            <select id="f-priority" class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-              <option ${t.priority === 'high' ? 'selected' : ''} value="high">High</option>
-              <option ${t.priority === 'medium' ? 'selected' : ''} value="medium">Medium</option>
-              <option ${t.priority === 'low' ? 'selected' : ''} value="low">Low</option>
-            </select>
+            <select id="f-priority" class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">${priorityOpts}</select>
           </div>
           <div>
             <label class="text-sm text-gray-500">Status</label>
-            <select id="f-status" class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-              <option ${t.status === 'to-do' ? 'selected' : ''} value="to-do">To-do</option>
-              <option ${t.status === 'in_progress' ? 'selected' : ''} value="in_progress">In Progress</option>
-              <option ${t.status === 'review' ? 'selected' : ''} value="review">Review</option>
-              <option ${t.status === 'done' ? 'selected' : ''} value="done">Done</option>
-            </select>
+            <select id="f-status" class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">${statusOpts}</select>
           </div>
           <div class="md:col-span-2">
             <label class="text-sm text-gray-500">Category</label>
@@ -302,6 +296,14 @@ async function taskForm(t = {}) {
         </div>`;
 }
 
+// { <option ${t.priority === 'high' ? 'selected' : ''} value="high">High</option> }
+// { <option ${t.priority === 'medium' ? 'selected' : ''} value="medium">Medium</option> }
+// { <option ${t.priority === 'low' ? 'selected' : ''} value="low">Low</option> }
+
+// <option ${t.status === 'W' ? 'selected' : ''} value="to-do">To-do</option>
+// <option ${t.status === 'P' ? 'selected' : ''} value="in_progress">In Progress</option>
+// <option ${t.status === 'C' ? 'selected' : ''} value="done">Done</option>
+
 async function openNewTask() {
     const data = await state();
 
@@ -310,7 +312,7 @@ async function openNewTask() {
         bodyHTML: taskForm(
             {
                 status: 'to-do',
-                priority: 'medium',
+                priority: 'h',
                 category: data.categories[0].id,
                 due: new Date().toISOString()
             }
@@ -321,15 +323,18 @@ async function openNewTask() {
                 description: $('#f-desc').value.trim(),
                 category: $('#f-category').value,
                 reminder: (new Date()).toISOString(),
-                status: status_interpreter($('#f-status').value.trim()),
-                proirity: priority_interpreter($('#f-priority').value)
+                status: $('#f-status').value.trim(),
+                proirity: $('#f-priority').value
             };
             if (!t.title) {
                 toast('Title is required', 'error');
                 return false;
             }
             try {
+                console.log(t.proirity);
+                console.log(t.status);
                 createTask(t);
+                fetchNewData();
                 renderAll();
                 toast('Task created');
             } catch (e) {
@@ -342,19 +347,21 @@ async function openNewTask() {
 async function openEditTask(id) {
     const tasks = (await state()).tasks;
     const t = tasks.find(x => x.id == id);
-    console.log(tasks);
-    if (!t) return;
+    if (!t)
+        return;
     openModal({
         title: 'Edit Task',
         bodyHTML: taskForm(t),
         onSubmit() {
             t.title = $('#f-title').value.trim();
             t.description = $('#f-desc').value.trim();
-            t.due = new Date($('#f-due').value || Date.now()).toISOString();
-            t.priority = $('#f-priority').value;
-            t.status = $('#f-status').value;
             t.category = $('#f-category').value;
-            updateTask(t);
+            if ($('#f-due').value !== "")
+                t.reminder = new Date($('#f-due').value).toISOString();
+            t.status = $('#f-status').value.trim();
+            t.priority = $('#f-priority').value;
+            updateTask(t, id);
+            fetchNewData();
             renderAll();
             toast('Task Updated');
         }
@@ -364,7 +371,8 @@ async function openEditTask(id) {
 async function openNewCategory() {
     const categories = (await state()).categories;
     openModal({
-        title: 'New Category', bodyHTML: `
+        title: 'New Category',
+        bodyHTML: `
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div class="md:col-span-2">
             <label class="text-sm text-gray-500">Name</label>
@@ -382,7 +390,12 @@ async function openNewCategory() {
                 return false;
             }
             /// must be completed
-            createCategories({ id: name.toLowerCase().replace(/\s+/g, '-'), name, color });
+            createCategories(
+                {
+                    title: name.toLowerCase(),
+                    color: color
+                });
+            fetchNewData();
             renderAll();
             toast('Category Added');
         }
@@ -396,7 +409,7 @@ async function renderKanbanFull() {
         const card = document.createElement('div');
         card.className = 'draggable px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 cursor-move';
         card.draggable = true; card.dataset.id = t.id;
-        card.innerHTML = `<div class="flex items-center justify-between"><span class="font-medium">${t.title}</span><span class="text-xs px-2 py-0.5 rounded ${PRIORITY_BADGE[t.priority]}">${t.priority}</span></div><div class="text-xs text-gray-500">${fmtDate(t.due)} • ${state.categories.find(c => c.id === t.category)?.name || ''}</div>`;
+        card.innerHTML = `<div class="flex items-center justify-between"><span class="font-medium">${t.title}</span><span class="text-xs px-2 py-0.5 rounded ${PRIORITY_BADGE[t.priority]}">${t.priority}</span></div><div class="text-xs text-gray-500">${fmtDate(t.reminder)} • ${state.categories.find(c => c.id === t.category)?.name || ''}</div>`;
         const col = $(`#route-kanban .kanban-col[data-status="${t.status}"] .kanban-drop`);
         col?.appendChild(card);
     });
@@ -458,7 +471,12 @@ async function wire() {
         const btn = e.target.closest('button, input[type="checkbox"]'); if (!btn) return;
         const id = btn.dataset.id;
         if (btn.dataset.action === 'edit') openEditTask(id);
-        if (btn.dataset.action === 'delete') { state.tasks = state.tasks.filter(t => t.id != id); renderAll(); toast('Task deleted'); }
+        if (btn.dataset.action === 'delete') {
+            state.tasks = state.tasks.filter(t => t.id != id);
+            deleteTask(id);
+            renderAll();
+            toast('Task deleted');
+        }
         if (btn.dataset.action === 'move') { const t = state.tasks.find(x => x.id == id); t.status = nextStatus(t.status); renderAll(); toast('Moved to ' + STATUS_LABEL[t.status]); }
         if (btn.dataset.action === 'toggle-complete') { const t = state.tasks.find(x => x.id == id); t.completed = btn.checked; if (t.completed) t.status = 'done'; renderAll(); }
     });
