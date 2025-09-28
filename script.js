@@ -139,23 +139,57 @@ function sameDay(a, b) {
         && a.getMonth() == b.getMonth() && a.getDate() == b.getDate();
 }
 
+
+// Convert hex to RGB
+function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+}
+
+// Calculate luminance to determine if color is light or dark
+function getLuminance(r, g, b) {
+    const [rs, gs, bs] = [r, g, b].map(c => {
+        c = c / 255;
+        return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+}
+
+// Get optimal text color (white or dark gray)
+function getTextColor(bgColor) {
+    const rgb = hexToRgb(bgColor);
+    if (!rgb)
+        return '#FFFFFF';
+
+    const luminance = getLuminance(rgb.r, rgb.g, rgb.b);
+    return luminance > 0.5 ? '#1F2937' : '#FFFFFF';
+}
+
+
 async function taskItemTemplate(t) {
     const data = await state();
     const cat = data.categories.find(c => c.id === t.category);
-    return ` 
+
+    return `
       <li class="py-3 flex gap-3">
         <input type="checkbox" ${t.completed ? 'checked' : ''} data-action="toggle-complete" data-id="${t.id}" class="mt-2 w-4 h-4 rounded border-gray-300">
         <div class="flex-1 min-w-0">
           <div class="flex items-start gap-2">
             <h4 class="font-medium truncate">${t.title}</h4>
             <span class="text-xs rounded-full px-2 py-0.5 ${PRIORITY_BADGE[t.priority]}">${t.priority}</span>
-            <span class="text-xs rounded-full px-2 py-0.5" style="background:${cat?.color}22;color:${cat?.color}">${cat?.name || ''}</span>
+            <span class="inline-flex font-bold items-center text-xs rounded-full px-3 py-1 " 
+                  style="background-color: ${cat.color}; color: ${getTextColor(cat.color)}">
+              ${cat.title || ''}
+            </span>
           </div>
           <p class="text-sm text-gray-500 line-clamp-2">${t.description || ''}</p>
           <div class="mt-1 text-xs text-gray-500 flex items-center gap-3">
             <span>⏰ ${fmtDate(t.reminder)}</span>
             <span>🌱 ${STATUS_LABEL[t.status]}</span>
-            <span class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800">#${cat.title}</span>
           </div>
         </div>
         <div class="flex items-center gap-1">
@@ -165,6 +199,7 @@ async function taskItemTemplate(t) {
         </div>
       </li>`;
 }
+
 
 async function renderTasks(filter = null) {
     const ul = $('#taskList');
@@ -204,7 +239,7 @@ async function renderCategories() {
     wrap.innerHTML = data.categories.map(c => `
         <button class="group p-3 rounded-xl border border-gray-200 dark:border-gray-800 text-left hover:shadow-soft" data-cat="${c.id}">
           <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full" style="background:#023972"></span>
+            <span class="w-3 h-3 rounded-full" style="background:${c?.color}"></span>
             <span class="font-medium">${c.title}</span>
             <span class="ml-auto text-xs text-gray-500">${data.tasks.filter(t => t.category === c.id).length}</span>
           </div>
@@ -296,13 +331,6 @@ async function taskForm(t = {}) {
         </div>`;
 }
 
-// { <option ${t.priority === 'high' ? 'selected' : ''} value="high">High</option> }
-// { <option ${t.priority === 'medium' ? 'selected' : ''} value="medium">Medium</option> }
-// { <option ${t.priority === 'low' ? 'selected' : ''} value="low">Low</option> }
-
-// <option ${t.status === 'W' ? 'selected' : ''} value="to-do">To-do</option>
-// <option ${t.status === 'P' ? 'selected' : ''} value="in_progress">In Progress</option>
-// <option ${t.status === 'C' ? 'selected' : ''} value="done">Done</option>
 
 async function openNewTask() {
     const data = await state();
