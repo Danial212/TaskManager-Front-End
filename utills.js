@@ -1,5 +1,5 @@
 import { authenticatedFetch } from "./user.js";
-export { getTasks, createTask, updateTask, getCategories, createCategories, updateCategories };
+export { getTasks, createTask, updateTask, deleteTask, getCategories, createCategories, updateCategories };
 
 const DomainURL = 'http://127.0.0.1:8000/'
 
@@ -25,7 +25,6 @@ async function createTask(task) {
 }
 
 async function updateTask(task, id) {
-    console.log(JSON.stringify(task));
     const tasksURL = DomainURL + 'tasks/' + id + '/';
     const header = {
         'Content-Type': 'application/json',
@@ -35,6 +34,17 @@ async function updateTask(task, id) {
         method: 'PATCH',
         body: JSON.stringify(task),
         headers: header
+    });
+}
+
+async function deleteTask(id) {
+    const tasksURL = DomainURL + 'tasks/' + id + '/';
+    const header = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+    };
+    const response = await authenticatedFetch(tasksURL, {
+        method: 'DELETE',
     });
 }
 

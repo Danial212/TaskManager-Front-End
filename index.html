@@ -5,66 +5,101 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>TaskFlow — Dashboard</title>
-    <!-- Tailwind via CDN for simplicity -->
     <script src="https://cdn.tailwindcss.com"></script>
-
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        .backdrop {
+            backdrop-filter: blur(12px);
+        }
+    </style>
 </head>
 
-<body class="h-full bg-gray-50 text-gray-900 antialiased dark:bg-gray-950 dark:text-gray-100">
+<body class="h-full bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 text-gray-900 antialiased dark:text-gray-100">
     <!-- App Container -->
     <div class="flex h-screen">
         <!-- Sidebar -->
         <aside id="sidebar"
-            class="hidden lg:flex lg:flex-col w-72 shrink-0 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-            <div class="flex items-center gap-3 px-6 h-16 border-b border-gray-200 dark:border-gray-800">
-                <button id="closeSidebar" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-                    aria-label="Close sidebar">✖️</button>
-                <div class="w-9 h-9 rounded-xl bg-brand-600 text-white grid place-items-center font-bold shadow-soft">TF
+            class="hidden lg:flex lg:flex-col w-80 shrink-0 border-r border-gray-200/50 dark:border-gray-800/50 bg-white/80 dark:bg-gray-900/80 backdrop">
+            <div class="flex items-center gap-3 px-6 h-20 border-b border-gray-200/50 dark:border-gray-800/50">
+                <button id="closeSidebar" class="lg:hidden p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    aria-label="Close sidebar">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white grid place-items-center font-bold text-lg shadow-lg shadow-blue-500/30">
+                    TF
                 </div>
                 <div>
-                    <h1 class="text-lg font-semibold">TaskFlow</h1>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Your daily command center</p>
+                    <h1 class="text-xl font-bold tracking-tight">TaskFlow</h1>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Productivity Suite</p>
                 </div>
             </div>
 
-            <nav class="p-4 space-y-2 overflow-y-auto">
+            <nav class="p-5 space-y-1.5 overflow-y-auto flex-1">
                 <a href="#" data-nav="dashboard"
-                    class="nav-link flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-brand-50 dark:hover:bg-gray-800">
-                    <span>🏠</span><span class="font-mum">Dashboard</span>
+                    class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-gray-800 dark:hover:to-gray-800/50 transition-all duration-200">
+                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    <span class="font-semibold">Dashboard</span>
                 </a>
                 <a href="#" data-nav="tasks"
-                    class="nav-link flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-brand-50 dark:hover:bg-gray-800">
-                    <span>🗂️</span><span class="font-medium">All Tasks</span>
+                    class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-gray-800 dark:hover:to-gray-800/50 transition-all duration-200">
+                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <span class="font-semibold">All Tasks</span>
                     <span id="countAll"
-                        class="ml-auto text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800">0</span>
+                        class="ml-auto text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">0</span>
                 </a>
                 <a href="#" data-nav="kanban"
-                    class="nav-link flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-brand-50 dark:hover:bg-gray-800">
-                    <span>🧩</span><span class="font-medium">Kanban</span>
+                    class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-gray-800 dark:hover:to-gray-800/50 transition-all duration-200">
+                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
+                    </svg>
+                    <span class="font-semibold">Kanban Board</span>
                 </a>
                 <a href="#" data-nav="calendar"
-                    class="nav-link flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-brand-50 dark:hover:bg-gray-800">
-                    <span>🗓️</span><span class="font-medium">Calendar</span>
+                    class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-gray-800 dark:hover:to-gray-800/50 transition-all duration-200">
+                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <span class="font-semibold">Calendar</span>
                 </a>
                 <a href="#" data-nav="categories"
-                    class="nav-link flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-brand-50 dark:hover:bg-gray-800">
-                    <span>🏷️</span><span class="font-medium">Categories</span>
+                    class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-gray-800 dark:hover:to-gray-800/50 transition-all duration-200">
+                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                    </svg>
+                    <span class="font-semibold">Categories</span>
                 </a>
                 <a href="#" data-nav="settings"
-                    class="nav-link flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-brand-50 dark:hover:bg-gray-800">
-                    <span>⚙️</span><span class="font-medium">Settings</span>
+                    class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-gray-800 dark:hover:to-gray-800/50 transition-all duration-200">
+                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <span class="font-semibold">Settings</span>
                 </a>
             </nav>
 
-            <div class="mt-auto p-4 border-t border-gray-200 dark:border-gray-800">
-                <div class="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 dark:bg-gray-800">
-                    <img src="https://i.pravatar.cc/100?img=12" alt="User" class="w-10 h-10 rounded-full" />
-                    <div class="min-w-0">
-                        <p class="font-semibold truncate" id="userName">Alex Johnson</p>
+            <div class="mt-auto p-5 border-t border-gray-200/50 dark:border-gray-800/50">
+                <div class="flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-800 dark:to-gray-800/50 border border-gray-200/50 dark:border-gray-700/50">
+                    <img src="https://i.pravatar.cc/100?img=12" alt="User" class="w-12 h-12 rounded-full ring-2 ring-white dark:ring-gray-700 shadow-md" />
+                    <div class="min-w-0 flex-1">
+                        <p class="font-semibold truncate text-sm" id="userName">Alex Johnson</p>
                         <p class="text-xs text-gray-500 truncate" id="userEmail">alex@example.com</p>
                     </div>
                     <button id="logoutBtn"
-                        class="ml-auto text-sm px-3 py-1 rounded-lg bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600">Logout</button>
+                        class="text-sm px-3 py-1.5 rounded-lg bg-white hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 transition-colors font-medium">
+                        Logout
+                    </button>
                 </div>
             </div>
         </aside>
@@ -73,79 +108,131 @@
         <div class="flex-1 flex flex-col min-w-0">
             <!-- Topbar -->
             <header
-                class="flex items-center gap-3 h-16 px-4 md:px-6 border-b border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 backdrop">
-                <button id="openSidebar" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-                    aria-label="Open sidebar">☰</button>
+                class="flex items-center gap-4 h-20 px-6 border-b border-gray-200/50 dark:border-gray-800/50 bg-white/80 dark:bg-gray-900/80 backdrop">
+                <button id="openSidebar" class="lg:hidden p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    aria-label="Open sidebar">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
                 <div
-                    class="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 w-full max-w-lg">
-                    <span>🔎</span>
-                    <input id="searchInput" type="search" class="w-full bg-transparent outline-none"
+                    class="hidden md:flex items-center gap-3 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 w-full max-w-xl shadow-sm hover:shadow-md transition-shadow">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input id="searchInput" type="search" class="w-full bg-transparent outline-none text-sm placeholder-gray-400"
                         placeholder="Search tasks, tags, #id… (press /)" />
-                    <kbd class="text-xs text-gray-500">/</kbd>
+                    <kbd class="text-xs text-gray-400 font-mono px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded">/</kbd>
                 </div>
                 <div class="ml-auto flex items-center gap-2">
                     <button id="newTaskBtn"
-                        class="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-brand-600 text-white hover:bg-brand-700 shadow-soft"
-                        data-tip="New task (N)">➕ New Task</button>
+                        class="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200 font-semibold text-sm"
+                        data-tip="New task (N)">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        New Task
+                    </button>
                     <button id="newCategoryBtn"
-                        class="hidden md:inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-gray-800"
-                        data-tip="Add category">🏷️ Category</button>
-                    <button id="notifBtn" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-                        aria-label="Notifications">🔔</button>
-                    <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-                        aria-label="Toggle dark mode" data-tip="Dark mode (D)">🌙</button>
+                        class="hidden md:inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors font-medium text-sm"
+                        data-tip="Add category">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                        </svg>
+                        Category
+                    </button>
+                    <button id="notifBtn" class="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative"
+                        aria-label="Notifications">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                    </button>
+                    <button id="themeToggle" class="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        aria-label="Toggle dark mode" data-tip="Dark mode (D)">
+                        <svg class="w-6 h-6 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                        </svg>
+                        <svg class="w-6 h-6 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                    </button>
                 </div>
             </header>
 
             <!-- Content Switcher -->
-            <main id="route-dashboard" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+            <main id="route-dashboard" class="flex-1 overflow-y-auto p-6 space-y-6">
                 <!-- Stats -->
-                <section class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <section class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                     <div
-                        class="p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-soft">
-                        <p class="text-sm text-gray-500">Due Today</p>
-                        <p id="statToday" class="mt-2 text-3xl font-semibold">0</p>
+                        class="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-sm hover:shadow-xl hover:shadow-blue-500/10 dark:hover:shadow-blue-500/5 transition-all duration-300 hover:-translate-y-1">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">Due Today</p>
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 grid place-items-center group-hover:scale-110 transition-transform">
+                                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <p id="statToday" class="text-4xl font-bold text-gray-900 dark:text-white">0</p>
                     </div>
                     <div
-                        class="p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-soft">
-                        <p class="text-sm text-gray-500">Overdue</p>
-                        <p id="statOverdue" class="mt-2 text-3xl font-semibold">0</p>
+                        class="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-sm hover:shadow-xl hover:shadow-red-500/10 dark:hover:shadow-red-500/5 transition-all duration-300 hover:-translate-y-1">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">Overdue</p>
+                            <div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 grid place-items-center group-hover:scale-110 transition-transform">
+                                <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <p id="statOverdue" class="text-4xl font-bold text-gray-900 dark:text-white">0</p>
                     </div>
                     <div
-                        class="p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-soft">
-                        <p class="text-sm text-gray-500">Completed</p>
-                        <p id="statDone" class="mt-2 text-3xl font-semibold">0</p>
+                        class="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-sm hover:shadow-xl hover:shadow-green-500/10 dark:hover:shadow-green-500/5 transition-all duration-300 hover:-translate-y-1">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">Completed</p>
+                            <div class="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-900/20 grid place-items-center group-hover:scale-110 transition-transform">
+                                <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <p id="statDone" class="text-4xl font-bold text-gray-900 dark:text-white">0</p>
                     </div>
                     <div
-                        class="p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-soft">
-                        <p class="text-sm text-gray-500">Categories</p>
-                        <p id="statCategories" class="mt-2 text-3xl font-semibold">0</p>
+                        class="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-sm hover:shadow-xl hover:shadow-purple-500/10 dark:hover:shadow-purple-500/5 transition-all duration-300 hover:-translate-y-1">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">Categories</p>
+                            <div class="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-900/20 grid place-items-center group-hover:scale-110 transition-transform">
+                                <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <p id="statCategories" class="text-4xl font-bold text-gray-900 dark:text-white">0</p>
                     </div>
                 </section>
 
                 <!-- Quick Actions & Filters -->
-                <section class="flex flex-wrap items-center gap-2">
+                <section class="flex flex-wrap items-center gap-3">
                     <button
-                        class="px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800"
-                        id="filterAll">All</button>
+                        class="px-5 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium transition-all shadow-sm hover:shadow-md"
+                        id="filterAll">All Tasks</button>
                     <button
-                        class="px-3 py-2 rounded-xl bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-800"
-                        data-filter="todo">To-do</button>
+                        class="px-5 py-2.5 rounded-xl bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium transition-all shadow-sm hover:shadow-md"
+                        data-filter="toDo">To Do</button>
                     <button
-                        class="px-3 py-2 rounded-xl bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-800"
-                        data-filter="in_progress">In Progress</button>
+                        class="px-5 py-2.5 rounded-xl bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium transition-all shadow-sm hover:shadow-md"
+                        data-filter="inProgress">In Progress</button>
                     <button
-                        class="px-3 py-2 rounded-xl bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-800"
-                        data-filter="review">Review</button>
-                    <button
-                        class="px-3 py-2 rounded-xl bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-800"
-                        data-filter="done">Done</button>
-                    <div class="ml-auto flex items-center gap-2">
-                        <label class="text-sm text-gray-500">Sort</label>
+                        class="px-5 py-2.5 rounded-xl bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium transition-all shadow-sm hover:shadow-md"
+                        data-filter="Done">Done</button>
+                    <div class="ml-auto flex items-center gap-3">
+                        <label class="text-sm font-semibold text-gray-600 dark:text-gray-400">Sort by</label>
                         <select id="sortSelect"
-                            class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-                            <option value="due_asc">Due ↑</option>
-                            <option value="due_desc">Due ↓</option>
+                            class="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 font-medium shadow-sm hover:shadow-md transition-all cursor-pointer">
+                            <option value="due_asc">Due Date ↑</option>
+                            <option value="due_desc">Due Date ↓</option>
                             <option value="priority">Priority</option>
                             <option value="status">Status</option>
                         </select>
@@ -156,160 +243,196 @@
                 <section class="grid grid-cols-1 xl:grid-cols-3 gap-6">
                     <!-- Task List -->
                     <div
-                        class="xl:col-span-2 p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
-                        <div class="flex items-center justify-between mb-3">
-                            <h2 class="text-lg font-semibold">Tasks</h2>
-                            <button class="px-3 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700"
-                                id="addTaskTop">Add Task</button>
+                        class="xl:col-span-2 p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-lg">
+                        <div class="flex items-center justify-between mb-5">
+                            <h2 class="text-xl font-bold">Tasks</h2>
+                            <button class="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/30 font-semibold transition-all"
+                                id="addTaskTop">+ Add Task</button>
                         </div>
-                        <ul id="taskList" class="divide-y divide-gray-200 dark:divide-gray-800"></ul>
-                        <div id="emptyTasks" class="hidden text-center text-gray-500 py-10">No tasks yet. Create your
-                            first task ➕</div>
+                        <ul id="taskList" class="divide-y divide-gray-200/50 dark:divide-gray-800/50"></ul>
+                        <div id="emptyTasks" class="hidden text-center text-gray-500 py-16">
+                            <svg class="w-20 h-20 mx-auto mb-4 text-gray-300 dark:text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                            <p class="text-lg font-semibold mb-2">No tasks yet</p>
+                            <p class="text-sm">Create your first task to get started</p>
+                        </div>
                     </div>
 
                     <!-- Right Column: Kanban Preview + Calendar + Notes -->
                     <div class="space-y-6">
                         <!-- Kanban Preview -->
                         <div
-                            class="p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
-                            <div class="flex items-center justify-between mb-3">
-                                <h3 class="font-semibold">Kanban</h3>
-                                <a href="#" data-nav="kanban" class="text-sm text-brand-600 hover:underline">Open Board
-                                    →</a>
+                            class="p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-lg">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-bold">Kanban Overview</h3>
+                                <a href="#" data-nav="kanban" class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold hover:underline">View Board →</a>
                             </div>
-                            <div class="grid grid-cols-4 gap-3 text-sm">
-                                <div>
-                                    <p class="text-xs text-gray-500 mb-1">To-do</p>
-                                    <ul id="kanbanTodo" class="space-y-2 min-h-[2rem]"></ul>
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/30 dark:hover:bg-slate-900/50 transition-colors border border-slate-200/50 dark:border-slate-800/50">
+                                    <div class="w-3 h-3 rounded-full bg-slate-500"></div>
+                                    <p class="text-sm font-semibold text-slate-700 dark:text-slate-300 flex-1">To Do</p>
+                                    <span id="kanbanTodo" class="bg-slate-600 text-white text-xs font-bold px-3 py-1 rounded-full">0</span>
                                 </div>
-                                <div>
-                                    <p class="text-xs text-gray-500 mb-1">In Progress</p>
-                                    <ul id="kanbanProgress" class="space-y-2 min-h-[2rem]"></ul>
+                                <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 transition-colors border border-blue-200/50 dark:border-blue-800/50">
+                                    <div class="w-3 h-3 rounded-full bg-blue-500 animate-pulse"></div>
+                                    <p class="text-sm font-semibold text-blue-700 dark:text-blue-300 flex-1">In Progress</p>
+                                    <span id="kanbanProgress" class="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">0</span>
                                 </div>
-                                <div>
-                                    <p class="text-xs text-gray-500 mb-1">Review</p>
-                                    <ul id="kanbanReview" class="space-y-2 min-h-[2rem]"></ul>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-gray-500 mb-1">Done</p>
-                                    <ul id="kanbanDone" class="space-y-2 min-h-[2rem]"></ul>
+                                <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/30 transition-colors border border-emerald-200/50 dark:border-emerald-800/50">
+                                    <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                                    <p class="text-sm font-semibold text-emerald-700 dark:text-emerald-300 flex-1">Done</p>
+                                    <span id="kanbanDone" class="bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full">0</span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Mini Calendar -->
                         <div
-                            class="p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
-                            <div class="flex items-center justify-between mb-3">
-                                <h3 class="font-semibold">Calendar</h3>
-                                <div class="space-x-2">
+                            class="p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-lg">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-bold">Calendar</h3>
+                                <div class="flex gap-2">
                                     <button id="prevMonth"
-                                        class="px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700">◀</button>
+                                        class="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                                        </svg>
+                                    </button>
                                     <button id="nextMonth"
-                                        class="px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700">▶</button>
+                                        class="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
-                            <p id="calTitle" class="text-sm text-gray-500 mb-2"></p>
+                            <p id="calTitle" class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3"></p>
                             <div id="calendarGrid" class="grid grid-cols-7 gap-2 text-center text-sm"></div>
                         </div>
 
                         <!-- Quick Notes -->
                         <div
-                            class="p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
-                            <h3 class="font-semibold mb-2">Quick Notes</h3>
+                            class="p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-lg">
+                            <h3 class="text-lg font-bold mb-4">Quick Notes</h3>
                             <textarea id="quickNotes"
-                                class="w-full h-28 p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+                                class="w-full h-32 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
                                 placeholder="Jot down quick ideas…"></textarea>
-                            <div class="text-right mt-2">
+                            <div class="text-right mt-3">
                                 <button id="saveNotes"
-                                    class="px-3 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600">Save</button>
+                                    class="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 font-medium transition-colors">Save Notes</button>
                             </div>
                         </div>
                     </div>
                 </section>
 
                 <!-- Categories -->
-                <section class="p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="font-semibold">Categories</h3>
+                <section class="p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-lg">
+                    <div class="flex items-center justify-between mb-5">
+                        <h3 class="text-xl font-bold">Categories</h3>
                         <button id="addCategoryTop"
-                            class="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700">Add
-                            Category</button>
+                            class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium transition-colors">+ Add Category</button>
                     </div>
-                    <div id="categoryGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3"></div>
+                    <div id="categoryGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"></div>
                 </section>
             </main>
 
             <!-- Route: Kanban Full -->
-            <main id="route-kanban" class="hidden flex-1 overflow-y-auto p-4 md:p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-semibold">Kanban Board</h2>
+            <main id="route-kanban" class="hidden flex-1 overflow-y-auto p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold">Kanban Board</h2>
                     <button data-nav="dashboard"
-                        class="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700">← Back</button>
+                        class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium transition-colors">← Back to Dashboard</button>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div class="kanban-col" data-status="todo">
-                        <h4 class="font-semibold mb-2">To-do</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="kanban-col" data-status="toDo">
+                        <div class="flex items-center gap-2 mb-4">
+                            <div class="w-3 h-3 rounded-full bg-slate-500"></div>
+                            <h4 class="font-bold text-lg">To Do</h4>
+                        </div>
                         <div
-                            class="kanban-drop space-y-2 min-h-[200px] p-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+                            class="kanban-drop space-y-3 min-h-[400px] p-4 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
                         </div>
                     </div>
-                    <div class="kanban-col" data-status="in_progress">
-                        <h4 class="font-semibold mb-2">In Progress</h4>
+                    <div class="kanban-col" data-status="inProgress">
+                        <div class="flex items-center gap-2 mb-4">
+                            <div class="w-3 h-3 rounded-full bg-blue-500 animate-pulse"></div>
+                            <h4 class="font-bold text-lg">In Progress</h4>
+                        </div>
                         <div
-                            class="kanban-drop space-y-2 min-h-[200px] p-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+                            class="kanban-drop space-y-3 min-h-[400px] p-4 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
                         </div>
                     </div>
-                    <div class="kanban-col" data-status="review">
-                        <h4 class="font-semibold mb-2">Review</h4>
-                        <div
-                            class="kanban-drop space-y-2 min-h-[200px] p-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+                    <div class="kanban-col" data-status="Done">
+                        <div class="flex items-center gap-2 mb-4">
+                            <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                            <h4 class="font-bold text-lg">Done</h4>
                         </div>
-                    </div>
-                    <div class="kanban-col" data-status="done">
-                        <h4 class="font-semibold mb-2">Done</h4>
                         <div
-                            class="kanban-drop space-y-2 min-h-[200px] p-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+                            class="kanban-drop space-y-3 min-h-[400px] p-4 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
                         </div>
                     </div>
                 </div>
             </main>
 
             <!-- Other routes placeholders -->
-            <main id="route-tasks" class="hidden flex-1 p-6">Coming soon…</main>
-            <main id="route-calendar" class="hidden flex-1 p-6">Coming soon…</main>
-            <main id="route-categories" class="hidden flex-1 p-6">Coming soon…</main>
-            <main id="route-settings" class="hidden flex-1 p-6">Coming soon…</main>
+            <main id="route-tasks" class="hidden flex-1 p-6">
+                <div class="text-center py-20">
+                    <h2 class="text-2xl font-bold mb-2">All Tasks View</h2>
+                    <p class="text-gray-500">Coming soon…</p>
+                </div>
+            </main>
+            <main id="route-calendar" class="hidden flex-1 p-6">
+                <div class="text-center py-20">
+                    <h2 class="text-2xl font-bold mb-2">Calendar View</h2>
+                    <p class="text-gray-500">Coming soon…</p>
+                </div>
+            </main>
+            <main id="route-categories" class="hidden flex-1 p-6">
+                <div class="text-center py-20">
+                    <h2 class="text-2xl font-bold mb-2">Categories Manager</h2>
+                    <p class="text-gray-500">Coming soon…</p>
+                </div>
+            </main>
+            <main id="route-settings" class="hidden flex-1 p-6">
+                <div class="text-center py-20">
+                    <h2 class="text-2xl font-bold mb-2">Settings</h2>
+                    <p class="text-gray-500">Coming soon…</p>
+                </div>
+            </main>
 
         </div>
     </div>
 
     <!-- Modals -->
-    <div id="modalOverlay" class="hidden fixed inset-0 z-50 grid place-items-center bg-black/40 backdrop p-4"
+    <div id="modalOverlay" class="hidden fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop p-4"
         aria-hidden="true"></div>
 
     <template id="modalTemplate">
         <div role="dialog" aria-modal="true"
-            class="w-full max-w-2xl rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-soft">
-            <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 p-4">
-                <h3 id="modalTitle" class="text-lg font-semibold">New Task</h3>
-                <button class="modal-close p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-                    aria-label="Close">✖️</button>
+            class="w-full max-w-2xl rounded-3xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-gray-200/50 dark:border-gray-800/50 p-6">
+                <h3 id="modalTitle" class="text-xl font-bold">New Task</h3>
+                <button class="modal-close p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    aria-label="Close">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
             </div>
-            <div class="p-4 space-y-3" id="modalBody"></div>
-            <div class="flex justify-end gap-2 p-4 border-t border-gray-200 dark:border-gray-800">
+            <div class="p-6" id="modalBody"></div>
+            <div class="flex justify-end gap-3 p-6 border-t border-gray-200/50 dark:border-gray-800/50">
                 <button
-                    class="modal-close px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700">Cancel</button>
+                    class="modal-close px-5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium transition-colors">Cancel</button>
                 <button id="modalPrimary"
-                    class="px-4 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700">Save</button>
+                    class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 font-semibold transition-all">Save</button>
             </div>
         </div>
     </template>
 
     <!-- Toasts -->
-    <div id="toastStack" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+    <div id="toastStack" class="fixed bottom-6 right-6 z-50 space-y-3"></div>
 </body>
 <script type="module" src="script.js"></script>
-
 
 </html>

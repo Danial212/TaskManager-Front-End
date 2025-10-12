@@ -1,7 +1,13 @@
-import { getUser } from "./user.js";
-import { getTasks, createTask, updateTask, getCategories, createCategories, updateCategories } from "./utills.js";
+import { getTasks, createTask, updateTask, deleteTask, getCategories, createCategories, updateCategories } from "./utills.js";
+import { taskItemTemplate, renderCategories, taskForm, openNewCategory, openEditTask, openNewTask, closeModal, openModal } from "./renderTemplates.js";
+import {
+    PRIORITY_BADGE, STATUS_LABEL, STATUS_LABEL_Array, PRIORITY_LABEL, GetStatusLabel, $, $$, fmtDate, sameDay,
+    todayISO, getTextColor, taskDone, hexToRgb, getLuminance
+    , fetchState, getCachdData, saveStateIntoCache, fetchNewData, state
+} from "./sharedData.js";
 
-// Optional Tailwind config (extend colors, shadows)
+
+// Tailwind config
 tailwind.config = {
     darkMode: 'class',
     theme: {
@@ -22,83 +28,10 @@ tailwind.config = {
     }
 }
 
-/********************    Minimal Data Layer (localStorage)\n     
- Replace fetch/save with DRF endpoints later.\n     ********************/
-const STORAGE_KEY = 'taskflow:v1';
-//  the time duration for data catch (User, Category, Tasks)
-const STORAGE_DURATION = 5 * 60 * 1000;
 
-async function state() {
-    //  Use calid cach data from local storage
-    let data = getCachdData()
-    if (data != null)
-        return data;
-
-    //  Fetch fresh data from server + save into cache
-    data = await fetchState();
-    saveStateIntoCache(data, Date.now())
-    return data;
-}
-
-async function fetchNewData() {
-    const data = await fetchState();
-    saveStateIntoCache(data, Date.now())
-    return data;
-}
-
-function saveStateIntoCache(data, time) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        data, time
-    }));
-}
-
-function getCachdData() {
-    let cached = (localStorage.getItem(STORAGE_KEY));
-
-    // Return Cathed data from local storage
-    if (cached) {
-        const { data, time } = JSON.parse(cached);
-        const isValid = (Date.now() - time) < STORAGE_DURATION;
-
-        if (isValid)
-            return data;
-    }
-    return null;
-}
-
-async function fetchState() {
-    let currentUser = await getUser();
-    let categories = await getCategories();
-    let tasks = await getTasks();
-
-    let user = { name: currentUser.username, email: currentUser.email };
-
-    let data =
-    {
-        user,
-        categories,
-        tasks
-    };
-    return data;
-}
-function addDays(n) { const d = new Date(); d.setDate(d.getDate() + n); d.setHours(12, 0, 0, 0); return d.toISOString(); }
-
-/********************\n     * Helpers\n     ********************/
-const $ = sel => document.querySelector(sel);
-const $$ = sel => Array.from(document.querySelectorAll(sel));
-const fmtDate = iso => new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-const todayISO = () => { const d = new Date(); d.setHours(12, 0, 0, 0); return d.toISOString(); };
-
-const PRIORITY_BADGE = {
-    high: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-    medium: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-    low: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
-};
-
-const STATUS_LABEL = { W: 'to-do', P: 'in_progress', C: 'done' };
-const PRIORITY_LABEL = { H: 'High', M: 'Medium', L: 'Low' };
-
-/********************\n     * Rendering\n     ********************/
+/********************
+ * Rendering Logic
+ ********************/
 async function renderAll() {
     let data = null;
     try {
@@ -125,79 +58,13 @@ async function renderStats() {
 
     const data = await state();
 
-    const dueToday = data.tasks.filter(t => sameDay(new Date(t.reminder.split('T')[0]), today) && !t.completed).length;
-    const overdue = data.tasks.filter(t => new Date(t.reminder.split('T')[0]) < today && !t.completed).length;
-    const done = data.tasks.filter(t => t.completed).length;
+    const dueToday = data.tasks.filter(t => sameDay(new Date(t.reminder.split('T')[0]), today) && !taskDone(t)).length;
+    const overdue = data.tasks.filter(t => new Date(t.reminder.split('T')[0]) < today && !taskDone(t)).length;
+    const done = data.tasks.filter(t => taskDone(t)).length;
     $('#statToday').textContent = dueToday;
     $('#statOverdue').textContent = overdue;
     $('#statDone').textContent = done;
     $('#statCategories').textContent = data.categories.length;
-}
-
-function sameDay(a, b) {
-    return a.getFullYear() == b.getFullYear()
-        && a.getMonth() == b.getMonth() && a.getDate() == b.getDate();
-}
-
-
-// Convert hex to RGB
-function hexToRgb(hex) {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-    } : null;
-}
-
-// Calculate luminance to determine if color is light or dark
-function getLuminance(r, g, b) {
-    const [rs, gs, bs] = [r, g, b].map(c => {
-        c = c / 255;
-        return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-    });
-    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
-}
-
-// Get optimal text color (white or dark gray)
-function getTextColor(bgColor) {
-    const rgb = hexToRgb(bgColor);
-    if (!rgb)
-        return '#FFFFFF';
-
-    const luminance = getLuminance(rgb.r, rgb.g, rgb.b);
-    return luminance > 0.5 ? '#1F2937' : '#FFFFFF';
-}
-
-
-async function taskItemTemplate(t) {
-    const data = await state();
-    const cat = data.categories.find(c => c.id === t.category);
-
-    return `
-      <li class="py-3 flex gap-3">
-        <input type="checkbox" ${t.completed ? 'checked' : ''} data-action="toggle-complete" data-id="${t.id}" class="mt-2 w-4 h-4 rounded border-gray-300">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-start gap-2">
-            <h4 class="font-medium truncate">${t.title}</h4>
-            <span class="text-xs rounded-full px-2 py-0.5 ${PRIORITY_BADGE[t.priority]}">${t.priority}</span>
-            <span class="inline-flex font-bold items-center text-xs rounded-full px-3 py-1 " 
-                  style="background-color: ${cat.color}; color: ${getTextColor(cat.color)}">
-              ${cat.title || ''}
-            </span>
-          </div>
-          <p class="text-sm text-gray-500 line-clamp-2">${t.description || ''}</p>
-          <div class="mt-1 text-xs text-gray-500 flex items-center gap-3">
-            <span>⏰ ${fmtDate(t.reminder)}</span>
-            <span>🌱 ${STATUS_LABEL[t.status]}</span>
-          </div>
-        </div>
-        <div class="flex items-center gap-1">
-          <button class="px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" data-action="edit" data-id="${t.id}">✏️</button>
-          <button class="px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" data-action="move" data-id="${t.id}">↔️</button>
-          <button class="px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-red-600" data-action="delete" data-id="${t.id}">🗑️</button>
-        </div>
-      </li>`;
 }
 
 
@@ -210,17 +77,22 @@ async function renderTasks(filter = null) {
     if (q)
         items = items.filter(t => [t.title, t.description, t.tags?.join(' ')].join(' ').toLowerCase().includes(q));
     if (filter && filter !== 'all')
-        items = items.filter(t => t.status === filter);
+        items = items.filter(t => STATUS_LABEL[t.status] == filter);
     const sort = $('#sortSelect').value;
     items.sort((a, b) => {
-        if (sort === 'due_asc') return new Date(a.reminder) - new Date(b.reminder);
-        if (sort === 'due_desc') return new Date(b.reminder) - new Date(a.reminder);
-        if (sort === 'priority') { const order = { high: 0, medium: 1, low: 2 }; return order[a.priority] - order[b.priority]; }
-        if (sort === 'status') { const order = { todo: 0, in_progress: 1, review: 2, done: 3 }; return order[a.status] - order[b.status]; }
+        if (sort === 'due_asc') return (new Date(a.reminder) - new Date(b.reminder));
+        if (sort === 'due_desc') return (new Date(b.reminder) - new Date(a.reminder));
+        if (sort === 'priority') { const order = { high: 0, medium: 1, low: 2 }; return order[a.proirity] - order[b.proirity]; }
+        if (sort === 'status') {
+            let order = {};
+            for (let i = 0; i < STATUS_LABEL_Array.length; i++)
+                order[STATUS_LABEL_Array[i]] = i;
+            return order[a.status] - order[b.status];
+        }
         return 0;
     });
 
-    Promise.all(items.map(t => taskItemTemplate(t))).then(result => {
+    Promise.all(items.map(t => taskItemTemplate(data, t, taskDone))).then(result => {
         ul.innerHTML = result.join('');
     })
 
@@ -229,321 +101,275 @@ async function renderTasks(filter = null) {
 
 async function renderKanbanPreview() {
     const data = await state();
-    const buckets = { todo: '#kanbanTodo', in_progress: '#kanbanProgress', review: '#kanbanReview', done: '#kanbanDone' };
-    Object.entries(buckets).forEach(([st, sel]) => { $(sel).innerHTML = data.tasks.filter(t => t.status === st).slice(0, 3).map(t => `<li class="px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-800">${t.title}</li>`).join('') || '<div class="text-xs text-gray-400">No items</div>'; });
+    const buckets = { toDo: '#kanbanTodo', inProgress: '#kanbanProgress', Done: '#kanbanDone' };
+    Object.entries(buckets).forEach(([st, sel]) => {
+        let count = data.tasks.filter(t => STATUS_LABEL[t.status] == st).length;
+        $(sel).innerHTML = count;
+    });
 }
 
-async function renderCategories() {
-    const data = await state();
-    const wrap = $('#categoryGrid');
-    wrap.innerHTML = data.categories.map(c => `
-        <button class="group p-3 rounded-xl border border-gray-200 dark:border-gray-800 text-left hover:shadow-soft" data-cat="${c.id}">
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full" style="background:${c?.color}"></span>
-            <span class="font-medium">${c.title}</span>
-            <span class="ml-auto text-xs text-gray-500">${data.tasks.filter(t => t.category === c.id).length}</span>
-          </div>
-        </button>
-      `).join('');
-}
 
-/********************\n     * Calendar (very small helper)\n     ********************/
+/********************
+ * Calendar
+ ********************/
 let cal = new Date();
 async function renderCalendar() {
     const data = await state();
-    const year = cal.getFullYear(); const month = cal.getMonth();
+    const year = cal.getFullYear();
+    const month = cal.getMonth();
     $('#calTitle').textContent = cal.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
-    const first = new Date(year, month, 1); const last = new Date(year, month + 1, 0);
-    const grid = $('#calendarGrid'); grid.innerHTML = '';
-    const startWeekday = (first.getDay() + 6) % 7; // Monday=0
-    for (let i = 0; i < startWeekday; i++) grid.appendChild(document.createElement('div'));
+    const first = new Date(year, month, 1);
+    const last = new Date(year, month + 1, 0);
+    const grid = $('#calendarGrid');
+    grid.innerHTML = '';
+    const startWeekday = (first.getDay() + 6) % 7;
+    for (let i = 0; i < startWeekday; i++)
+        grid.appendChild(document.createElement('div'));
     for (let d = 1; d <= last.getDate(); d++) {
         const dayDate = new Date(year, month, d, 12);
         const count = data.tasks.filter(t => sameDay(new Date(t.reminder), dayDate)).length;
         const cell = document.createElement('button');
-        cell.className = 'p-2 rounded-lg border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800';
-        cell.innerHTML = `<div class="text-xs text-gray-500">${d}</div>${count ? `<div class='mt-1 text-xs px-2 py-0.5 rounded-full bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-200'>${count} tasks</div>` : ''}`;
+        cell.className = 'group relative p-3 rounded-xl border border-gray-200/60 dark:border-gray-700/50 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-md dark:hover:shadow-gray-900/50 transition-all duration-200 bg-white dark:bg-gray-800/50 hover:bg-gradient-to-br hover:from-gray-50 hover:to-white dark:hover:from-gray-800 dark:hover:to-gray-800/80 backdrop-blur-sm';
+        cell.innerHTML = `<div class="font-semibold text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">${d}</div>${count ? `<div class='mt-1.5 text-xs font-medium px-2.5 py-1 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-sm dark:shadow-blue-500/20'>${count}</div>` : ''}`;
         grid.appendChild(cell);
     }
 }
 
-/********************\n     * Modals (New/Edit Task, Category)\n     ********************/
-
-async function openModal({ title, bodyHTML, onSubmit }) {
-    const overlay = $('#modalOverlay');
-    overlay.innerHTML = '';
-
-    const tpl = document.importNode($('#modalTemplate').content, true);
-    tpl.querySelector('#modalTitle').textContent = title;
-
-    const body = tpl.querySelector('#modalBody');
-    body.innerHTML = (await bodyHTML);
-
-    const primary = tpl.querySelector('#modalPrimary');
-    primary.onclick = () => { if (onSubmit?.() !== false) closeModal(); };
-    tpl.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', closeModal));
-    overlay.appendChild(tpl);
-    overlay.classList.remove('hidden');
-    overlay.setAttribute('aria-hidden', 'false');
-    // focus first input
-    setTimeout(() => overlay.querySelector('input,textarea,select,button')?.focus(), 0);
-}
-
-function closeModal() {
-    const overlay = $('#modalOverlay');
-    overlay.classList.add('hidden');
-    overlay.setAttribute('aria-hidden', 'true');
-    overlay.innerHTML = '';
-}
-
-async function taskForm(t = {}) {
-    const catOpts = (await state()).categories.map(c => `<option value="${c.id}" ${t.category === c.id ? 'selected' : ''}>${c.title}</option>`).join('');
-    const statusOpts = Object.entries(STATUS_LABEL).map(([label, value]) => `<option ${t.status === label ? 'selected' : ''} value="${label}">${value}</option>`).join('');
-    console.log(t.proirity);
-    const priorityOpts = Object.entries(PRIORITY_LABEL).map(([label, value]) => `<option ${t.proirity === label ? 'selected' : ''} value="${label}">${value}</option>`).join('');
-
-    return `
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div>
-            <label class="text-sm text-gray-500">Title</label>
-            <input id="f-title" class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900" value="${t.title || ''}"/>
-          </div>
-          <div>
-            <label class="text-sm text-gray-500">Due Date</label>
-            <input id="f-due" type="date" class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900" value="${t.reminder ? new Date(t.reminder).toISOString().slice(0, 10) : ''}"/>
-          </div>
-          <div>
-            <label class="text-sm text-gray-500">Priority</label>
-            <select id="f-priority" class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">${priorityOpts}</select>
-          </div>
-          <div>
-            <label class="text-sm text-gray-500">Status</label>
-            <select id="f-status" class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">${statusOpts}</select>
-          </div>
-          <div class="md:col-span-2">
-            <label class="text-sm text-gray-500">Category</label>
-            <select id="f-category" class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">${catOpts}</select>
-          </div>
-          <div class="md:col-span-2">
-            <label class="text-sm text-gray-500">Description</label>
-            <textarea id="f-desc" rows="3" class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">${t.description || ''}</textarea>
-          </div>
-        </div>`;
-}
+/********************
+ * Modals
+ ********************/
+// Import them from 'renderTemplates.js', for clean coding
 
 
-async function openNewTask() {
-    const data = await state();
-
-    openModal({
-        title: 'New Task',
-        bodyHTML: taskForm(
-            {
-                status: 'to-do',
-                priority: 'h',
-                category: data.categories[0].id,
-                due: new Date().toISOString()
-            }
-        ),
-        onSubmit() {
-            const t = {
-                title: $('#f-title').value.trim(),
-                description: $('#f-desc').value.trim(),
-                category: $('#f-category').value,
-                reminder: (new Date()).toISOString(),
-                status: $('#f-status').value.trim(),
-                proirity: $('#f-priority').value
-            };
-            if (!t.title) {
-                toast('Title is required', 'error');
-                return false;
-            }
-            try {
-                console.log(t.proirity);
-                console.log(t.status);
-                createTask(t);
-                fetchNewData();
-                renderAll();
-                toast('Task created');
-            } catch (e) {
-                console.log(e);
-            }
-        }
-    });
-}
-
-async function openEditTask(id) {
-    const tasks = (await state()).tasks;
-    const t = tasks.find(x => x.id == id);
-    if (!t)
-        return;
-    openModal({
-        title: 'Edit Task',
-        bodyHTML: taskForm(t),
-        onSubmit() {
-            t.title = $('#f-title').value.trim();
-            t.description = $('#f-desc').value.trim();
-            t.category = $('#f-category').value;
-            if ($('#f-due').value !== "")
-                t.reminder = new Date($('#f-due').value).toISOString();
-            t.status = $('#f-status').value.trim();
-            t.priority = $('#f-priority').value;
-            updateTask(t, id);
-            fetchNewData();
-            renderAll();
-            toast('Task Updated');
-        }
-    });
-}
-
-async function openNewCategory() {
-    const categories = (await state()).categories;
-    openModal({
-        title: 'New Category',
-        bodyHTML: `
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div class="md:col-span-2">
-            <label class="text-sm text-gray-500">Name</label>
-            <input id="c-name" class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"/>
-          </div>
-          <div>
-            <label class="text-sm text-gray-500">Color</label>
-            <input id="c-color" type="color" value="#6366f1" class="mt-1 w-full h-10 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"/>
-          </div>
-        </div>`, onSubmit() {
-            const name = $('#c-name').value.trim();
-            const color = $('#c-color').value;
-            if (!name) {
-                toast('Name is required', 'error');
-                return false;
-            }
-            /// must be completed
-            createCategories(
-                {
-                    title: name.toLowerCase(),
-                    color: color
-                });
-            fetchNewData();
-            renderAll();
-            toast('Category Added');
-        }
-    });
-}
-
-/********************\n     * Drag & Drop (Kanban Full)\n     ********************/
+/********************
+ * Drag & Drop (Kanban)
+ ********************/
 async function renderKanbanFull() {
     $$('#route-kanban .kanban-drop').forEach(drop => drop.innerHTML = '');
-    await state().tasks.forEach(t => {
+    const data = await state();
+    data.tasks.forEach(t => {
         const card = document.createElement('div');
-        card.className = 'draggable px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 cursor-move';
-        card.draggable = true; card.dataset.id = t.id;
-        card.innerHTML = `<div class="flex items-center justify-between"><span class="font-medium">${t.title}</span><span class="text-xs px-2 py-0.5 rounded ${PRIORITY_BADGE[t.priority]}">${t.priority}</span></div><div class="text-xs text-gray-500">${fmtDate(t.reminder)} • ${state.categories.find(c => c.id === t.category)?.name || ''}</div>`;
-        const col = $(`#route-kanban .kanban-col[data-status="${t.status}"] .kanban-drop`);
+        card.className = 'draggable px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 cursor-move hover:shadow-lg transition-all duration-200';
+        card.draggable = true;
+        card.dataset.id = t.id;
+        card.innerHTML = `
+            <div class="flex items-center justify-between mb-2">
+                <span class="font-semibold text-sm">${t.title}</span>
+                <span class="text-xs font-bold px-2.5 py-1 rounded-lg ${PRIORITY_BADGE[t.proirity]}">${t.proirity}</span>
+            </div>
+            <div class="text-xs text-gray-500 flex items-center gap-2">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                ${fmtDate(t.reminder)}
+                <span>•</span>
+                ${data.categories.find(c => c.id === t.category)?.title || ''}
+            </div>`;
+        const col = $(`#route-kanban .kanban-col[data-status="${STATUS_LABEL[t.status]}"] .kanban-drop`);
         col?.appendChild(card);
     });
     enableDnD();
 }
 
-function enableDnD() {
+async function enableDnD() {
+    const data = await state();
     $$('.draggable').forEach(el => {
-        el.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', el.dataset.id); el.classList.add('dragging'); });
-        el.addEventListener('dragend', () => el.classList.remove('dragging'));
+        el.addEventListener('dragstart', e => {
+            e.dataTransfer.setData('text/plain', el.dataset.id);
+            el.classList.add('opacity-50');
+        });
+        el.addEventListener('dragend', () => el.classList.remove('opacity-50'));
     });
     $$('#route-kanban .kanban-drop').forEach(drop => {
-        drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('ring-2', 'ring-brand-500'); });
-        drop.addEventListener('dragleave', () => drop.classList.remove('ring-2', 'ring-brand-500'));
-        drop.addEventListener('drop', e => {
-            e.preventDefault(); drop.classList.remove('ring-2', 'ring-brand-500');
+        drop.addEventListener('dragover', e => {
+            e.preventDefault();
+            drop.classList.add('ring-2', 'ring-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+        });
+        drop.addEventListener('dragleave', () => {
+            drop.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+        });
+        drop.addEventListener('drop', async e => {
+            e.preventDefault();
+            drop.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
             const id = Number(e.dataTransfer.getData('text/plain'));
-            const col = drop.closest('.kanban-col'); const st = col.dataset.status;
-            const t = state.tasks.find(x => x.id === id); if (t) { t.status = st; renderAll(); renderKanbanFull(); toast('Task moved'); }
+            const col = drop.closest('.kanban-col');
+            const st = GetStatusLabel(col.dataset.status);
+            const t = data.tasks.find(x => x.id === id);
+            if (t) {
+                t.status = st.trim();
+                await updateTask(t, id);
+                await fetchNewData();
+                await renderAll();
+                await renderKanbanFull();
+                toast('Task moved to ' + col.dataset.status);
+            }
         });
     });
 }
 
-/********************\n     * Toasts\n     ********************/
+/********************
+ * Toasts
+ ********************/
 function toast(msg, type = 'success') {
     const el = document.createElement('div');
-    el.className = `px-4 py-2 rounded-xl shadow-soft border ${type === 'error' ? 'border-red-300 bg-red-50 text-red-800 dark:bg-red-900/30 dark:text-red-200' : 'border-gray-200 bg-white dark:bg-gray-900'}`;
-    el.textContent = msg;
+    el.className = `px-5 py-3 rounded-xl shadow-xl border flex items-center gap-3 ${type === 'error' ? 'border-red-300 bg-red-50 text-red-800 dark:bg-red-900/30 dark:text-red-200 dark:border-red-800' : 'border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-800'}`;
+
+    const icon = type === 'error'
+        ? '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+        : '<svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+
+    el.innerHTML = icon + `<span class="font-medium">${msg}</span>`;
     $('#toastStack').appendChild(el);
-    setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(8px)'; el.style.transition = 'all .3s'; setTimeout(() => el.remove(), 300); }, 1800);
+    setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(100%)';
+        el.style.transition = 'all .3s';
+        setTimeout(() => el.remove(), 300);
+    }, 2500);
 }
 
-/********************\n     * Routing (simple)\n     ********************/
+/********************
+ * Routing
+ ********************/
 function routeTo(name) {
     ['dashboard', 'kanban', 'tasks', 'calendar', 'categories', 'settings'].forEach(r => $('#route-' + r).classList.add('hidden'));
     $('#route-' + name).classList.remove('hidden');
-    $$('.nav-link').forEach(a => a.classList.toggle('bg-brand-50', a.dataset.nav === name));
-    if (name === 'kanban') renderKanbanFull();
+    $$('.nav-link').forEach(a => {
+        if (a.dataset.nav === name) {
+            a.classList.add('bg-gradient-to-r', 'from-blue-50', 'to-indigo-50', 'dark:from-gray-800', 'dark:to-gray-800/50');
+        } else {
+            a.classList.remove('bg-gradient-to-r', 'from-blue-50', 'to-indigo-50', 'dark:from-gray-800', 'dark:to-gray-800/50');
+        }
+    });
+    if (name === 'kanban')
+        renderKanbanFull();
 }
 
-/********************\n     * Event Wiring\n     ********************/
+/********************
+ * Event Wiring
+ ********************/
 async function wire() {
-    // Nav
     $$('.nav-link').forEach(a => a.addEventListener('click', e => { e.preventDefault(); routeTo(a.dataset.nav); }));
 
-    // Search
     $('#searchInput')?.addEventListener('input', () => renderTasks());
 
-    // Filters
-    $('[data-filter="todo"]').addEventListener('click', () => renderTasks('todo'));
-    $('[data-filter="in_progress"]').addEventListener('click', () => renderTasks('in_progress'));
-    $('[data-filter="review"]').addEventListener('click', () => renderTasks('review'));
-    $('[data-filter="done"]').addEventListener('click', () => renderTasks('done'));
+
+    Object.entries(STATUS_LABEL).forEach(x => {
+        const label = x[1];
+        const property = $(`[data-filter="${label}"]`);
+        property.addEventListener('click', () => renderTasks(label));
+    })
+
     $('#filterAll').addEventListener('click', () => renderTasks('all'));
     $('#sortSelect').addEventListener('change', () => renderTasks());
 
-    // Add/Edit/Delete actions (event delegation)
-    $('#taskList').addEventListener('click', e => {
-        const btn = e.target.closest('button, input[type="checkbox"]'); if (!btn) return;
-        const id = btn.dataset.id;
-        if (btn.dataset.action === 'edit') openEditTask(id);
-        if (btn.dataset.action === 'delete') {
-            state.tasks = state.tasks.filter(t => t.id != id);
-            deleteTask(id);
-            renderAll();
-            toast('Task deleted');
+    $('#taskList').addEventListener('focusout', async e => {
+        const data = await state();
+        const txtTitle = e.target.closest('h4');
+        if (txtTitle && txtTitle.dataset.id) {
+            const id = txtTitle.dataset.id;
+            const t = data.tasks.find(x => x.id == id);
+            t.title = txtTitle.textContent;
+            await updateTask(t, id);
+            await fetchNewData();
+            await renderAll();
         }
-        if (btn.dataset.action === 'move') { const t = state.tasks.find(x => x.id == id); t.status = nextStatus(t.status); renderAll(); toast('Moved to ' + STATUS_LABEL[t.status]); }
-        if (btn.dataset.action === 'toggle-complete') { const t = state.tasks.find(x => x.id == id); t.completed = btn.checked; if (t.completed) t.status = 'done'; renderAll(); }
+    })
+
+    $('#taskList').addEventListener('keydown', async e => {
+        if (e.key == 'Enter') {
+            e.preventDefault();
+            e.target.blur();
+        }
+    })
+
+    $('#taskList').addEventListener('click', async e => {
+        const data = await state();
+        const btn = e.target.closest('button, input[type="checkbox"]');
+
+        if (btn) {
+            const id = btn.dataset.id;
+            if (btn.dataset.action === 'edit') openEditTask(id);
+            if (btn.dataset.action === 'delete') {
+                data.tasks = data.tasks.filter(t => t.id != id);
+                await deleteTask(id);
+                await fetchNewData();
+                await renderAll();
+                toast('Task deleted successfully');
+            }
+            if (btn.dataset.action === 'move') {
+                const t = data.tasks.find(x => {
+                    console.log(x.id, id);
+                    return x.id == id
+                });
+                t.status = nextStatus(t.status);
+                await updateTask(t, id)
+                await fetchNewData();
+                await renderAll();
+                toast('Moved to ' + STATUS_LABEL[t.status]);
+            }
+            if (btn.dataset.action === 'toggle-complete') {
+                const t = data.tasks.find(x => x.id == id);
+                t.status = GetStatusLabel(btn.checked ? 'Done' : 'inProgress');
+                await updateTask(t, id);
+                await fetchNewData()
+                await renderAll();
+            }
+        }
     });
 
-    // New Task/Category buttons
     $('#newTaskBtn').addEventListener('click', openNewTask);
     $('#addTaskTop').addEventListener('click', openNewTask);
     $('#newCategoryBtn').addEventListener('click', openNewCategory);
     $('#addCategoryTop').addEventListener('click', openNewCategory);
 
-    // Calendar nav
     $('#prevMonth').addEventListener('click', () => { cal.setMonth(cal.getMonth() - 1); renderCalendar(); });
     $('#nextMonth').addEventListener('click', () => { cal.setMonth(cal.getMonth() + 1); renderCalendar(); });
 
-    // Notes
-    $('#saveNotes').addEventListener('click', () => { state.notes = $('#quickNotes').value; saveState(); toast('Notes saved'); });
+    $('#saveNotes').addEventListener('click', () => { state.notes = $('#quickNotes').value; saveState(); toast('Notes saved successfully'); });
     $('#quickNotes').value = state.notes || '';
 
-    // Sidebar responsive
     $('#openSidebar').addEventListener('click', () => $('#sidebar').classList.remove('hidden'));
     $('#closeSidebar').addEventListener('click', () => $('#sidebar').classList.add('hidden'));
 
-    // Theme toggle + shortcuts
     $('#themeToggle').addEventListener('click', toggleTheme);
+
     document.addEventListener('keydown', (e) => {
         if (e.key === '/') { e.preventDefault(); $('#searchInput')?.focus(); }
         if (e.key.toLowerCase() === 'n') openNewTask();
         if (e.key.toLowerCase() === 'd') toggleTheme();
     });
 
-    // Route links
     $('[data-nav="kanban"]').addEventListener('click', () => routeTo('kanban'));
 }
 
-function nextStatus(s) { return s === 'todo' ? 'in_progress' : s === 'in_progress' ? 'review' : s === 'review' ? 'done' : 'todo'; }
-
-function toggleTheme() {
-    const html = document.documentElement; html.classList.toggle('dark');
+function nextStatus(s) {
+    const length = Object.entries(STATUS_LABEL).length
+    for (let i = 0; i < length; i++) {
+        const currentStatus = Object.entries(STATUS_LABEL)[i];
+        if (s == currentStatus[0]) {
+            if (i == length - 1)
+                return s
+            return Object.entries(STATUS_LABEL)[i + 1][0]
+        }
+    }
+    return null
 }
 
-/********************\n     * Bootstrap\n     ********************/
-document.addEventListener('DOMContentLoaded', () => { wire(); renderAll(); });
+function toggleTheme() {
+    const html = document.documentElement;
+    html.classList.toggle('dark');
+    localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+}
+
+/********************
+ * Bootstrap
+ ********************/
+document.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+    }
+    wire();
+    renderAll();
+});
