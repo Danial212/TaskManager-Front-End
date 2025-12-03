@@ -362,6 +362,8 @@ function toggleTheme() {
     localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
 }
 
+
+
 /********************
  * Bootstrap
  ********************/

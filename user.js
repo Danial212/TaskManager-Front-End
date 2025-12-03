@@ -1,38 +1,8 @@
+import { getAuthTokens } from "./auth.js"
+import { REFRESH_TOKEN, ACCESS_TOKEN, DomainURL, getCookies, setCookies } from "./sharedData.js"
 export { getUser, authenticatedFetch }
 
 
-const DomainURL = 'http://127.0.0.1:8000/'
-const REFRESH_TOKEN = 'refresh_token'
-const ACCESS_TOKEN = 'access_token'
-
-
-//  Getting both Access and Refresh tokens, and saving in cookies
-async function getAuthTokens() {
-    const AuthURL = DomainURL + 'auth/jwt/create';
-    const loginData = {
-        username: 'user',
-        password: 'user'
-    };
-
-    // For login (to get JWT tokens)
-    let response = await fetch(AuthURL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(loginData)  // UNCOMMENT THIS!
-    })
-
-    if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
-
-    let data = await response.json()
-    console.log('JWT Tokens:', data);
-
-    // Save tokens in cookies
-    setCookies(ACCESS_TOKEN, data.access, 2);
-    setCookies(REFRESH_TOKEN, data.refresh, 5);
-}
 
 async function getAccessToken() {
     const cachedToken = getCookies(ACCESS_TOKEN);
@@ -98,7 +68,6 @@ async function getUser() {
     return await response.json();
 }
 
-
 async function updateAccessToken() {
     let refresh_token = getCookies(REFRESH_TOKEN)
 
@@ -134,22 +103,3 @@ async function updateAccessToken() {
     }
 
 }
-
-// Complete cookie functions
-function setCookies(name, value, days = 7) {
-    const expires = new Date();
-    expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
-    document.cookie = `${name}=${value}; expires=${expires.toUTCString()}; path=/`;
-}
-
-function getCookies(name) {  // Remove the 'value' parameter
-    const cookies = document.cookie.split(';');
-    for (let cookie of cookies) {
-        const [cookieName, cookieValue] = cookie.trim().split('=');
-        if (cookieName === name) {
-            return cookieValue;
-        }
-    }
-    return null;
-}
-

@@ -1,6 +1,15 @@
 import { getUser } from "./user.js";
 import { getTasks, createTask, updateTask, deleteTask, getCategories, createCategories, updateCategories } from "./utills.js";
-export { PRIORITY_BADGE, STATUS_LABEL, STATUS_LABEL_Array, PRIORITY_LABEL, GetStatusLabel, $, $$, fmtDate, sameDay, todayISO, getTextColor, getLuminance, taskDone, hexToRgb, fetchState, getCachdData, saveStateIntoCache, fetchNewData, state }
+export {
+    DomainURL, REFRESH_TOKEN, ACCESS_TOKEN, PRIORITY_BADGE, STATUS_LABEL, STATUS_LABEL_Array, PRIORITY_LABEL,
+    GetStatusLabel, $, $$, fmtDate, sameDay, todayISO, getTextColor, getLuminance, taskDone, hexToRgb,
+    fetchState, getCachdData, saveStateIntoCache, fetchNewData, state, setCookies, getCookies
+}
+
+
+const DomainURL = 'http://127.0.0.1:8000/'
+const REFRESH_TOKEN = 'refresh_token'
+const ACCESS_TOKEN = 'access_token'
 
 
 const PRIORITY_BADGE = {
@@ -24,6 +33,26 @@ function GetStatusLabel(status) {
  ********************/
 const STORAGE_KEY = 'taskflow:v1';
 const STORAGE_DURATION = 5 * 60 * 1000;
+
+// Complete cookie functions
+function setCookies(name, value, days = 7) {
+    const expires = new Date();
+    expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+    document.cookie = `${name}=${value}; expires=${expires.toUTCString()}; path=/`;
+}
+
+function getCookies(name) {  // Remove the 'value' parameter
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        const [cookieName, cookieValue] = cookie.trim().split('=');
+        if (cookieName === name) {
+            return cookieValue;
+        }
+    }
+    return null;
+}
+
+
 
 
 /********************
