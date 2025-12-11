@@ -103,7 +103,7 @@ loginForm.addEventListener('submit', async (e) => {
         await getAuthTokens(userName, password);
 
         // Simulate delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // await new Promise(resolve => setTimeout(resolve, 1500));
 
         // For demonstration purposes
         console.log('Login attempt:', { userName, password, remember });

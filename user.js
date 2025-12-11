@@ -1,6 +1,6 @@
 import { getAuthTokens } from "./auth.js"
-import { REFRESH_TOKEN, ACCESS_TOKEN, DomainURL, getCookies, setCookies } from "./sharedData.js"
-export { getUser, authenticatedFetch }
+import { REFRESH_TOKEN, ACCESS_TOKEN, DomainURL, getCookies, setCookies, removeCookies } from "./sharedData.js"
+export { getUser, authenticatedFetch, logout_user, navigate_login, logged_in }
 
 
 
@@ -102,4 +102,27 @@ async function updateAccessToken() {
         console.log(error);
     }
 
+}
+
+function logged_in() {
+    const cookies = document.cookie.split(';');
+    console.log(cookies.length);
+    
+    cookies.forEach(cookie => {
+        let [name, value] = cookie.split('=');
+        if ((name == ACCESS_TOKEN || name == REFRESH_TOKEN) && (value == '' || value == null))
+            return false;
+    });
+    return true && (cookies.length > 1);
+}
+
+function logout_user() {
+    removeCookies();
+    localStorage.clear();
+    navigate_login()
+    console.log("User Logged Out");
+}
+
+function navigate_login() {
+    location.replace('login.html');
 }

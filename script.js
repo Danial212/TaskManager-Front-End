@@ -1,10 +1,12 @@
 import { getTasks, createTask, updateTask, deleteTask, getCategories, createCategories, updateCategories } from "./utills.js";
-import { taskItemTemplate, renderCategories, taskForm, openNewCategory, openEditTask, openNewTask, closeModal, openModal } from "./renderTemplates.js";
+import {render_mono_category, taskItemTemplate, renderCategories, taskForm, openNewCategory, openEditTask, openNewTask, closeModal, openModal, taskItemTemplate_complete } from "./renderTemplates.js";
 import {
     PRIORITY_BADGE, STATUS_LABEL, STATUS_LABEL_Array, PRIORITY_LABEL, GetStatusLabel, $, $$, fmtDate, sameDay,
     todayISO, getTextColor, taskDone, hexToRgb, getLuminance
     , fetchState, getCachdData, saveStateIntoCache, fetchNewData, state
 } from "./sharedData.js";
+import { logged_in, logout_user, navigate_login } from "./user.js";
+export { renderAll }
 
 
 // Tailwind config
@@ -30,8 +32,14 @@ tailwind.config = {
 
 
 /********************
- * Rendering Logic
+ * Test Logics Here *
  ********************/
+
+
+
+/*******************
+ * Rendering Logic *
+ *******************/
 async function renderAll() {
     let data = null;
     try {
@@ -208,6 +216,399 @@ async function enableDnD() {
 }
 
 /********************
+ *    Tasks Panel   *  
+ ********************/
+
+// DOM Element References
+const TasksPanelElements = {
+  // Main containers
+  tasksList: document.getElementById('allTasksList'),
+  emptyState: document.getElementById('emptyAllTasks'),
+  taskCount: document.getElementById('taskCount'),
+  
+  // Filter elements
+  statusFilters: document.querySelectorAll('[data-filter-status]'),
+  priorityFilters: document.querySelectorAll('[data-filter-priority]'),
+  dateFilters: document.querySelectorAll('[data-filter-date]'),
+  categoryFilters: document.getElementById('categoryFilterList'),
+  clearFiltersBtn: document.getElementById('clearAllFilters'),
+  
+  // Sort dropdown
+  sortDropdown: document.getElementById('sortTasksView')
+};
+
+/**
+ * Task Actions Handler
+ * Handles all task-related actions (edit, delete, move, toggle completion)
+ */
+const TaskActions = {
+  async handleEdit(taskId) {
+    openEditTask(taskId);
+  },
+
+  async handleDelete(taskId) {
+    const data = await state();
+    data.tasks = data.tasks.filter(t => t.id != taskId);
+    
+    await deleteTask(taskId);
+    await fetchNewData();
+    await renderAll();
+    
+    toast('Task deleted successfully');
+  },
+
+  async handleMove(taskId) {
+    const data = await state();
+    const task = data.tasks.find(t => t.id == taskId);
+    
+    if (!task) return;
+    
+    task.status = nextStatus(task.status);
+    
+    await updateTask(task, taskId);
+    await fetchNewData();
+    await renderAll();
+    
+    toast(`Moved to ${STATUS_LABEL[task.status]}`);
+  },
+
+  async handleToggleComplete(taskId, isChecked) {
+    const data = await state();
+    const task = data.tasks.find(t => t.id == taskId);
+    
+    if (!task) return;
+    
+    task.status = GetStatusLabel(isChecked ? 'Done' : 'inProgress');
+    
+    await updateTask(task, taskId);
+    await fetchNewData();
+    await renderAll();
+  },
+
+  async handleTitleEdit(taskId, newTitle) {
+    const data = await state();
+    const task = data.tasks.find(t => t.id == taskId);
+    
+    if (!task) return;
+    
+    task.title = newTitle;
+    
+    await updateTask(task, taskId);
+    await fetchNewData();
+    await renderAll();
+  }
+};
+
+/**
+ * Filter Manager
+ * Extracts and manages active filters
+ */
+const FilterManager = {
+  getActiveStatusFilters() {
+    return Array.from(TasksPanelElements.statusFilters)
+      .filter(filter => filter.checked)
+      .map(filter => GetStatusLabel(filter.dataset.filterStatus));
+  },
+
+  getActivePriorityFilters() {
+    return Array.from(TasksPanelElements.priorityFilters)
+      .filter(filter => filter.checked)
+      .map(filter => filter.dataset.filterPriority.charAt(0).toUpperCase());
+  },
+
+  getActiveDateFilters() {
+    return Array.from(TasksPanelElements.dateFilters)
+      .filter(filter => filter.checked)
+      .map(filter => filter.dataset.filterDate);
+  },
+
+  getActiveCategoryFilters() {
+    const categoryButtons = TasksPanelElements.categoryFilters.querySelectorAll('button[data-cat]');
+    return Array.from(categoryButtons)
+      .filter(btn => btn.classList.contains('active'))
+      .map(btn => btn.dataset.cat);
+  },
+
+  applyFilters(tasks) {
+    const statusFilters = this.getActiveStatusFilters();
+    const priorityFilters = this.getActivePriorityFilters();
+    const dateFilters = this.getActiveDateFilters();
+    const categoryFilters = this.getActiveCategoryFilters();
+
+    let filteredTasks = [...tasks];
+
+    // Apply status filters
+    if (statusFilters.length > 0) {
+      filteredTasks = filteredTasks.filter(task => statusFilters.includes(task.status));
+    }
+
+    // Apply priority filters
+    if (priorityFilters.length > 0) {
+      filteredTasks = filteredTasks.filter(task => 
+        priorityFilters.includes(task.proirity?.charAt(0)?.toUpperCase())
+      );
+    }
+
+    // Apply date filters
+    if (dateFilters.length > 0) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      filteredTasks = filteredTasks.filter(task => {
+        const taskDate = new Date(task.reminder);
+        taskDate.setHours(0, 0, 0, 0);
+
+        return dateFilters.some(filter => {
+          if (filter === 'today') return taskDate.getTime() === today.getTime();
+          if (filter === 'week') {
+            const weekFromNow = new Date(today);
+            weekFromNow.setDate(weekFromNow.getDate() + 7);
+            return taskDate >= today && taskDate <= weekFromNow;
+          }
+          if (filter === 'overdue') return taskDate < today;
+          return false;
+        });
+      });
+    }
+
+    // Apply category filters
+    if (categoryFilters.length > 0) {
+      filteredTasks = filteredTasks.filter(task => categoryFilters.includes(task.category));
+    }
+
+    return filteredTasks;
+  }
+};
+
+/**
+ * Task Sorter
+ * Handles sorting logic for tasks
+ */
+const TaskSorter = {
+  sortTasks(tasks, sortType) {
+    const sortedTasks = [...tasks];
+
+    const sortFunctions = {
+      due_asc: (a, b) => new Date(a.reminder) - new Date(b.reminder),
+      due_desc: (a, b) => new Date(b.reminder) - new Date(a.reminder),
+      priority: (a, b) => {
+        const order = { high: 0, medium: 1, low: 2 };
+        return (order[a.proirity] ?? 3) - (order[b.proirity] ?? 3);
+      },
+      status: (a, b) => {
+        const order = {};
+        STATUS_LABEL_Array.forEach((status, index) => {
+          order[status] = index;
+        });
+        return (order[a.status] ?? 999) - (order[b.status] ?? 999);
+      }
+    };
+
+    const sortFunction = sortFunctions[sortType];
+    if (sortFunction) {
+      sortedTasks.sort(sortFunction);
+    }
+
+    return sortedTasks;
+  }
+};
+
+/**
+ * Event Handlers
+ * Manages all event listeners for the tasks panel
+ */
+function wireTasksPanel() {
+  const { tasksList, sortDropdown, statusFilters, priorityFilters, dateFilters, categoryFilters, clearFiltersBtn } = TasksPanelElements;
+
+  // Sort dropdown change
+  sortDropdown?.addEventListener('change', () => {
+    listAllTasks();
+  });
+
+  // Status filter changes
+  statusFilters.forEach(filter => {
+    filter.addEventListener('change', () => {
+      listAllTasks();
+    });
+  });
+
+  // Priority filter changes
+  priorityFilters.forEach(filter => {
+    filter.addEventListener('change', () => {
+      listAllTasks();
+    });
+  });
+
+  // Date filter changes
+  dateFilters.forEach(filter => {
+    filter.addEventListener('change', () => {
+      listAllTasks();
+    });
+  });
+
+  // Category filter clicks (delegated event)
+  categoryFilters?.addEventListener('click', (e) => {
+    const categoryBtn = e.target.closest('button[data-cat]');
+    if (categoryBtn) {
+      categoryBtn.classList.toggle('active');
+      listAllTasks();
+    }
+  });
+
+  // Clear all filters
+  clearFiltersBtn?.addEventListener('click', () => {
+    // Uncheck all filters
+    statusFilters.forEach(filter => filter.checked = false);
+    priorityFilters.forEach(filter => filter.checked = false);
+    dateFilters.forEach(filter => filter.checked = false);
+    
+    // Remove active class from category buttons
+    const categoryButtons = categoryFilters?.querySelectorAll('button[data-cat]');
+    categoryButtons?.forEach(btn => btn.classList.remove('active'));
+    
+    listAllTasks();
+  });
+
+  // Task title editing (focusout)
+  tasksList?.addEventListener('focusout', async (e) => {
+    const titleElement = e.target.closest('h4[contenteditable="true"]');
+    
+    if (titleElement?.dataset.id) {
+      const taskId = titleElement.dataset.id;
+      const newTitle = titleElement.textContent.trim();
+      
+      if (newTitle) {
+        await TaskActions.handleTitleEdit(taskId, newTitle);
+      }
+    }
+  });
+
+  // Task title editing (Enter key)
+  tasksList?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.hasAttribute('contenteditable')) {
+      e.preventDefault();
+      e.target.blur();
+    }
+  });
+
+  // Task actions (edit, delete, move, toggle)
+  tasksList?.addEventListener('click', async (e) => {
+    const actionElement = e.target.closest('button[data-action], input[type="checkbox"][data-action]');
+    
+    if (!actionElement?.dataset.id) return;
+    
+    const taskId = actionElement.dataset.id;
+    const action = actionElement.dataset.action;
+
+    switch (action) {
+      case 'edit':
+        await TaskActions.handleEdit(taskId);
+        break;
+      case 'delete':
+        await TaskActions.handleDelete(taskId);
+        break;
+      case 'move':
+        await TaskActions.handleMove(taskId);
+        break;
+      case 'toggle-complete':
+        await TaskActions.handleToggleComplete(taskId, actionElement.checked);
+        break;
+    }
+  });
+}
+
+/**
+ * Loads category filters into the panel
+ */
+async function fillPanelsOption() {
+  const data = await state();
+  const { categories } = data;
+  const { categoryFilters } = TasksPanelElements;
+
+  if (!categoryFilters) return;
+
+  if (!categories || categories.length === 0) {
+    categoryFilters.innerHTML = '<p class="col-span-full text-xs text-gray-400 dark:text-gray-500 px-3 py-2">No categories yet</p>';
+    return;
+  }
+
+  try {
+    const categoryHTML = await Promise.all(
+      categories.map(category => render_mono_category(category))
+    );
+    
+    categoryFilters.innerHTML = categoryHTML.join('');
+  } catch (error) {
+    console.error('Error loading categories:', error);
+    categoryFilters.innerHTML = '<p class="col-span-full text-xs text-red-400 px-3 py-2">Error loading categories</p>';
+  }
+}
+
+/**
+ * Lists and renders all tasks with applied filters and sorting
+ */
+async function listAllTasks() {
+  const data = await state();
+  let { tasks } = data;
+  const { tasksList, emptyState, taskCount, sortDropdown } = TasksPanelElements;
+
+  // Show empty state if no tasks exist
+  if (!tasks || tasks.length === 0) {
+    if (emptyState) emptyState.classList.remove('hidden');
+    if (tasksList) tasksList.innerHTML = '';
+    if (taskCount) taskCount.textContent = '0';
+    return;
+  }
+
+  // Hide empty state
+  if (emptyState) emptyState.classList.add('hidden');
+
+  // Apply filters
+  const filteredTasks = FilterManager.applyFilters(tasks);
+
+  // Apply sorting
+  const sortType = sortDropdown?.value || 'due_asc';
+  const sortedTasks = TaskSorter.sortTasks(filteredTasks, sortType);
+
+  // Update task count
+  if (taskCount) {
+    taskCount.textContent = sortedTasks.length;
+  }
+
+  // Render tasks
+  if (tasksList) {
+    if (sortedTasks.length === 0) {
+      tasksList.innerHTML = '<li class="col-span-full text-center py-12 text-gray-400 dark:text-gray-500">No tasks match the selected filters</li>';
+    } else {
+      try {
+        const tasksHTML = await Promise.all(
+          sortedTasks.map(task => taskItemTemplate_complete(data, task, taskDone))
+        );
+        tasksList.innerHTML = tasksHTML.join('');
+      } catch (error) {
+        console.error('Error rendering tasks:', error);
+        tasksList.innerHTML = '<li class="col-span-full text-center py-12 text-red-400">Error loading tasks</li>';
+      }
+    }
+  }
+}
+
+/**
+ * Initializes the tasks panel
+ */
+async function renderTasksPanel() {
+  await fillPanelsOption();
+  wireTasksPanel();
+  await listAllTasks();
+}
+
+
+async function calendarViewPanel(){
+
+}
+
+
+/********************
  * Toasts
  ********************/
 function toast(msg, type = 'success') {
@@ -235,21 +636,38 @@ function routeTo(name) {
     ['dashboard', 'kanban', 'tasks', 'calendar', 'categories', 'settings'].forEach(r => $('#route-' + r).classList.add('hidden'));
     $('#route-' + name).classList.remove('hidden');
     $$('.nav-link').forEach(a => {
-        if (a.dataset.nav === name) {
+        if (a.dataset.nav === name)
             a.classList.add('bg-gradient-to-r', 'from-blue-50', 'to-indigo-50', 'dark:from-gray-800', 'dark:to-gray-800/50');
-        } else {
+        else
             a.classList.remove('bg-gradient-to-r', 'from-blue-50', 'to-indigo-50', 'dark:from-gray-800', 'dark:to-gray-800/50');
-        }
     });
-    if (name === 'kanban')
-        renderKanbanFull();
+    switch (name) {
+        case 'kanban':
+            renderKanbanFull();
+            break;
+
+        case 'tasks':
+            renderTasksPanel();
+            break;
+
+        case 'calendar':
+            calendarViewPanel();
+            break;
+
+        default:
+            break;
+    }
+
 }
 
 /********************
  * Event Wiring
  ********************/
 async function wire() {
-    $$('.nav-link').forEach(a => a.addEventListener('click', e => { e.preventDefault(); routeTo(a.dataset.nav); }));
+    $$('.nav-link').forEach(a => a.addEventListener('click', e => {
+        e.preventDefault();
+        routeTo(a.dataset.nav);
+    }));
 
     $('#searchInput')?.addEventListener('input', () => renderTasks());
 
@@ -289,7 +707,8 @@ async function wire() {
 
         if (btn) {
             const id = btn.dataset.id;
-            if (btn.dataset.action === 'edit') openEditTask(id);
+            if (btn.dataset.action === 'edit')
+                openEditTask(id);
             if (btn.dataset.action === 'delete') {
                 data.tasks = data.tasks.filter(t => t.id != id);
                 await deleteTask(id);
@@ -334,6 +753,8 @@ async function wire() {
 
     $('#themeToggle').addEventListener('click', toggleTheme);
 
+    $('#logoutBtn').addEventListener('click', logout);
+
     document.addEventListener('keydown', (e) => {
         if (e.key === '/') { e.preventDefault(); $('#searchInput')?.focus(); }
         if (e.key.toLowerCase() === 'n') openNewTask();
@@ -362,16 +783,28 @@ function toggleTheme() {
     localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
 }
 
+function logout() {
+    logout_user();
+}
+
 
 
 /********************
  * Bootstrap
  ********************/
 document.addEventListener('DOMContentLoaded', () => {
+    if (!logged_in()) {
+        navigate_login();
+        return;
+    }
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
         document.documentElement.classList.add('dark');
     }
     wire();
     renderAll();
+
+
+    // Test garbage functionalities here(remove them after you're done with them)
+    routeTo('tasks')
 });

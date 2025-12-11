@@ -3,13 +3,14 @@ import { getTasks, createTask, updateTask, deleteTask, getCategories, createCate
 export {
     DomainURL, REFRESH_TOKEN, ACCESS_TOKEN, PRIORITY_BADGE, STATUS_LABEL, STATUS_LABEL_Array, PRIORITY_LABEL,
     GetStatusLabel, $, $$, fmtDate, sameDay, todayISO, getTextColor, getLuminance, taskDone, hexToRgb,
-    fetchState, getCachdData, saveStateIntoCache, fetchNewData, state, setCookies, getCookies
+    fetchState, getCachdData, saveStateIntoCache, fetchNewData, state, setCookies, getCookies, removeCookies
 }
 
 
 const DomainURL = 'http://127.0.0.1:8000/'
 const REFRESH_TOKEN = 'refresh_token'
 const ACCESS_TOKEN = 'access_token'
+const IGNORE_REFRESH_FETCH = true
 
 
 const PRIORITY_BADGE = {
@@ -52,7 +53,13 @@ function getCookies(name) {  // Remove the 'value' parameter
     return null;
 }
 
-
+function removeCookies() {
+    const cookies = document.cookie.split(';');
+    cookies.forEach(cookie => {
+        let [name, value] = cookie.split('=');
+        document.cookie = name + "=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+    });
+}
 
 
 /********************
@@ -78,6 +85,8 @@ async function state() {
 }
 
 async function fetchNewData() {
+    if (IGNORE_REFRESH_FETCH)
+        return getCachdData()
     const data = await fetchState();
     saveStateIntoCache(data, Date.now())
     return data;
@@ -96,7 +105,7 @@ function getCachdData() {
         const { data, time } = JSON.parse(cached);
         const isValid = (Date.now() - time) < STORAGE_DURATION;
 
-        if (isValid)
+        if (isValid || IGNORE_REFRESH_FETCH)
             return data;
     }
     return null;

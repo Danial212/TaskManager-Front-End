@@ -10,7 +10,7 @@ async function getAuthTokens(username, password) {
         username: username,
         password: password
     };
-
+    
     // For login (to get JWT tokens)
     let response = await fetch(AuthURL, {
         method: 'POST',
