@@ -23,19 +23,24 @@
             width: 8px;
             height: 8px;
         }
+
         ::-webkit-scrollbar-track {
             background: transparent;
         }
+
         ::-webkit-scrollbar-thumb {
             background: #cbd5e1;
             border-radius: 4px;
         }
+
         .dark ::-webkit-scrollbar-thumb {
             background: #334155;
         }
+
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
+
         .dark ::-webkit-scrollbar-thumb:hover {
             background: #475569;
         }
@@ -52,11 +57,13 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
+
         .task-card {
             animation: slideIn 0.3s ease-out;
         }
@@ -66,23 +73,35 @@
             0% {
                 box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
             }
+
             70% {
                 box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
             }
+
             100% {
                 box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
             }
         }
+
         .today-pulse {
             animation: pulse-ring 2s infinite;
         }
 
         /* Gradient text animation */
         @keyframes gradient-shift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
+
         .gradient-animate {
             background-size: 200% 200%;
             animation: gradient-shift 3s ease infinite;
@@ -883,9 +902,11 @@
                                     </svg>
                                 </button>
                                 <div class="flex items-center gap-2">
-                                    <span id="calCurrentMonth" class="text-sm font-bold min-w-[140px] text-center">December
+                                    <span id="calCurrentMonth"
+                                        class="text-sm font-bold min-w-[140px] text-center">December
                                         2024</span>
-                                    <span id="weekIndicator" class="text-xs font-medium text-gray-500 dark:text-gray-400"></span>
+                                    <span id="weekIndicator"
+                                        class="text-xs font-medium text-gray-500 dark:text-gray-400"></span>
                                 </div>
                                 <button id="calNextBtn"
                                     class="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
@@ -993,8 +1014,9 @@
                                                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                             </svg>
                                             <p class="text-sm font-medium">No tasks for this day</p>
-                                            <button class="mt-2 text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold" 
-                                                    onclick="openNewTaskForDate(new Date())">
+                                            <button
+                                                class="mt-2 text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold"
+                                                onclick="openNewTaskForDate(new Date())">
                                                 + Add Task
                                             </button>
                                         </div>
@@ -1039,17 +1061,341 @@
             </main>
 
 
-            <main id="route-categories" class="hidden flex-1 p-6">
-                <div class="text-center py-20">
-                    <h2 class="text-2xl font-bold mb-2">Categories Manager</h2>
-                    <p class="text-gray-500">Coming soon…</p>
+            <!-- Replace the route-categories section with this enhanced version -->
+            <main id="route-categories" class="hidden flex-1 overflow-y-auto p-6">
+                <div class="max-w-7xl mx-auto space-y-6">
+                    <!-- Header -->
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <h2
+                                class="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                                Categories Manager
+                            </h2>
+                            <p class="text-gray-500 dark:text-gray-400 mt-1">Organize your tasks with custom categories
+                            </p>
+                        </div>
+                        <button id="addCategoryBtn"
+                            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 transition-all duration-200 font-semibold">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4" />
+                            </svg>
+                            New Category
+                        </button>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div
+                            class="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-sm hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 hover:-translate-y-1">
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">Total Categories</p>
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-900/20 grid place-items-center group-hover:scale-110 transition-transform">
+                                    <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <p id="totalCategoriesCount" class="text-4xl font-bold text-gray-900 dark:text-white">0</p>
+                        </div>
+
+                        <div
+                            class="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-sm hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 hover:-translate-y-1">
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">Total Tasks</p>
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 grid place-items-center group-hover:scale-110 transition-transform">
+                                    <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <p id="totalTasksInCategories" class="text-4xl font-bold text-gray-900 dark:text-white">0
+                            </p>
+                        </div>
+
+                        <div
+                            class="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-sm hover:shadow-xl hover:shadow-green-500/10 transition-all duration-300 hover:-translate-y-1">
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">Most Used</p>
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-900/20 grid place-items-center group-hover:scale-110 transition-transform">
+                                    <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                    </svg>
+
+                                </div>
+                            </div>
+                            <p id="mostUsedCategory" class="text-lg font-bold text-gray-900 dark:text-white truncate">-
+                            </p>
+                        </div>
+
+                        <div
+                            class="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-sm hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300 hover:-translate-y-1">
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">Colors Used</p>
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-900/20 grid place-items-center group-hover:scale-110 transition-transform">
+                                    <svg class="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <p id="colorsUsedCount" class="text-4xl font-bold text-gray-900 dark:text-white">0</p>
+                        </div>
+                    </div>
+
+                    <!-- Search and Filter -->
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <div
+                            class="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-shadow">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <input id="categorySearchInput" type="search"
+                                class="w-full bg-transparent outline-none text-sm placeholder-gray-400"
+                                placeholder="Search categories..." />
+                        </div>
+                        <select id="categorySortSelect"
+                            class="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 font-medium cursor-pointer shadow-sm hover:shadow-md transition-all">
+                            <option value="name">Name A-Z</option>
+                            <option value="name_desc">Name Z-A</option>
+                            <option value="tasks">Most Tasks</option>
+                            <option value="recent">Recently Added</option>
+                            <option value="color">By Color</option>
+                        </select>
+                    </div>
+
+                    <!-- Categories Grid -->
+                    <div
+                        class="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-lg p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold">All Categories</h3>
+                            <div class="flex items-center gap-2">
+                                <button id="gridViewBtn"
+                                    class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                    data-active="true">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                                    </svg>
+                                </button>
+                                <button id="listViewBtn"
+                                    class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 6h16M4 12h16M4 18h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Grid View -->
+                        <div id="categoriesGridView"
+                            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                            <!-- Categories will be dynamically inserted here -->
+                        </div>
+
+                        <!-- List View -->
+                        <div id="categoriesListView" class="hidden space-y-3">
+                            <!-- Categories list will be dynamically inserted here -->
+                        </div>
+
+                        <!-- Empty State -->
+                        <div id="emptyCategoriesState" class="hidden text-center py-20">
+                            <svg class="w-20 h-20 mx-auto mb-4 text-gray-300 dark:text-gray-700" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                            </svg>
+                            <p class="text-lg font-semibold mb-2 text-gray-600 dark:text-gray-400">No categories yet</p>
+                            <p class="text-sm text-gray-500 mb-4">Create your first category to organize your tasks</p>
+                            <button onclick="document.getElementById('addCategoryBtn').click()"
+                                class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/30 font-semibold transition-all">
+                                Create Category
+                            </button>
+                        </div>
+
+                        <!-- No Results State -->
+                        <div id="noResultsState" class="hidden text-center py-20">
+                            <svg class="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-700" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <p class="text-lg font-semibold mb-1 text-gray-600 dark:text-gray-400">No categories found
+                            </p>
+                            <p class="text-sm text-gray-500">Try adjusting your search</p>
+                        </div>
+                    </div>
+
+                    <!-- Color Palette Reference -->
+                    <div
+                        class="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-lg p-6">
+                        <h3 class="text-lg font-bold mb-4">Quick Tips</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div
+                                class="flex items-start gap-3 p-4 rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-200/50 dark:border-purple-800/50">
+                                <div class="w-8 h-8 rounded-lg bg-purple-600 grid place-items-center shrink-0">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-sm text-purple-900 dark:text-purple-100 mb-1">Organize
+                                        Efficiently</p>
+                                    <p class="text-xs text-purple-700 dark:text-purple-300">Use categories to group
+                                        related tasks and improve your workflow</p>
+                                </div>
+                            </div>
+                            <div
+                                class="flex items-start gap-3 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200/50 dark:border-blue-800/50">
+                                <div class="w-8 h-8 rounded-lg bg-blue-600 grid place-items-center shrink-0">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-sm text-blue-900 dark:text-blue-100 mb-1">Color Coding
+                                    </p>
+                                    <p class="text-xs text-blue-700 dark:text-blue-300">Choose meaningful colors to
+                                        quickly identify task categories</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </main>
-            <main id="route-settings" class="hidden flex-1 p-6">
-                <div class="text-center py-20">
-                    <h2 class="text-2xl font-bold mb-2">Settings</h2>
-                    <p class="text-gray-500">Coming soon…</p>
+
+            <!-- Category Card Template (for reference in script.js) -->
+            <template id="categoryCardTemplate">
+                <div
+                    class="category-card group relative p-5 rounded-2xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden">
+                    <!-- Color accent bar -->
+                    <div class="absolute top-0 left-0 right-0 h-1.5 category-accent"></div>
+
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center gap-3 flex-1 min-w-0">
+                            <div class="w-12 h-12 rounded-xl grid place-items-center shrink-0 category-icon">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                </svg>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-bold text-gray-900 dark:text-white truncate category-name">Category Name
+                                </h4>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 category-desc truncate">Description
+                                </p>
+                            </div>
+                        </div>
+                        <div class="relative">
+                            <button
+                                class="category-menu-btn p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors opacity-0 group-hover:opacity-100">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div
+                        class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            <span class="text-sm font-semibold text-gray-600 dark:text-gray-400 category-task-count">0
+                                tasks</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button
+                                class="edit-category-btn p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors opacity-0 group-hover:opacity-100"
+                                title="Edit">
+                                <svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </button>
+                            <button
+                                class="delete-category-btn p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors opacity-0 group-hover:opacity-100"
+                                title="Delete">
+                                <svg class="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
+            </template>
+
+            <!-- Category List Item Template -->
+            <template id="categoryListItemTemplate">
+                <div
+                    class="category-list-item group flex items-center gap-4 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:shadow-md transition-all">
+                    <div class="w-3 h-3 rounded-full shrink-0 category-color-dot"></div>
+                    <div class="w-10 h-10 rounded-lg grid place-items-center shrink-0 category-icon-list">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-bold text-gray-900 dark:text-white truncate category-name-list">Category Name
+                        </h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 truncate category-desc-list">Description</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-right">
+                            <p class="text-sm font-bold text-gray-900 dark:text-white category-task-count-list">0</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">tasks</p>
+                        </div>
+                        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                                class="edit-category-list-btn p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                title="Edit">
+                                <svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </button>
+                            <button
+                                class="delete-category-list-btn p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                title="Delete">
+                                <svg class="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+
+            <main id="route-settings" class="hidden flex-1 overflow-y-auto p-6">
+                <!-- Content will be dynamically generated by renderSettings() -->
             </main>
 
         </div>
@@ -1087,7 +1433,8 @@
 
     <!-- Task Context Menu -->
     <div id="taskContextMenuTemplate" style="display: none;">
-        <div id="taskContextMenu" class="fixed z-50 w-48 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-xl p-2">
+        <div id="taskContextMenu"
+            class="fixed z-50 w-48 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-xl p-2">
             <!-- Content will be dynamically inserted -->
         </div>
     </div>

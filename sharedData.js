@@ -4,7 +4,8 @@ export {
     DomainURL, REFRESH_TOKEN, ACCESS_TOKEN, PRIORITY_BADGE, STATUS_LABEL, STATUS_LABEL_Array, PRIORITY_LABEL,
     GetStatusLabel, $, $$, fmtDate, sameDay, todayISO, getTextColor, getLuminance, taskDone, hexToRgb,
     fetchState, getCachdData, saveStateIntoCache, fetchNewData, state, setCookies, getCookies, removeCookies,
-    getDayName, getMonthYear, getDaysInMonth, getFirstDayOfMonth
+    getDayName, getMonthYear, getDaysInMonth, getFirstDayOfMonth,
+    toast,loadSettings
 }
 
 
@@ -187,4 +188,67 @@ function getDaysInMonth(year, month) {
 // Get first day of month (0 = Sunday)
 function getFirstDayOfMonth(year, month) {
     return new Date(year, month, 1).getDay();
+}
+/********************
+ * Toasts
+ ********************/
+function toast(msg, type = 'success') {
+    const el = document.createElement('div');
+    el.className = `px-5 py-3 rounded-xl shadow-xl border flex items-center gap-3 ${type === 'error' ? 'border-red-300 bg-red-50 text-red-800 dark:bg-red-900/30 dark:text-red-200 dark:border-red-800' : 'border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-800'}`;
+
+    const icon = type === 'error'
+        ? '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+        : '<svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+
+    el.innerHTML = icon + `<span class="font-medium">${msg}</span>`;
+    $('#toastStack').appendChild(el);
+    setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(100%)';
+        el.style.transition = 'all .3s';
+        setTimeout(() => el.remove(), 300);
+    }, 2500);
+}
+
+/********************
+ * Settings Management
+ ********************/
+const SETTINGS_KEY = 'taskflow:settings:v1';
+const DEFAULT_SETTINGS = {
+    // Appearance
+    theme: 'light',
+    defaultView: 'dashboard',
+    dateFormat: 'short',
+    
+    // Task Defaults
+    defaultTaskPriority: 'medium',
+    defaultTaskStatus: 'toDo',
+    defaultReminderTime: '09:00',
+    
+    // Notifications
+    enableNotifications: true,
+    notifyBeforeDue: 24,
+    
+    // Behavior
+    autoSaveNotes: true,
+    showCompletedTasks: true,
+    enableKeyboardShortcuts: true,
+    enableDragDrop: true,
+    
+    // Future extensibility
+    experimental: {}
+};
+
+function loadSettings() {
+    try {
+        const saved = localStorage.getItem(SETTINGS_KEY);
+        return saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : DEFAULT_SETTINGS;
+    } catch {
+        return DEFAULT_SETTINGS;
+    }
+}
+
+function saveSettings(settings) {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    toast('Settings saved successfully');
 }
