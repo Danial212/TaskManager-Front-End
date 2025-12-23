@@ -17,6 +17,76 @@
         .backdrop {
             backdrop-filter: blur(12px);
         }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Drag and drop visual feedback */
+        .drag-over {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(99, 102, 241, 0.05));
+            border: 2px dashed #3b82f6;
+        }
+
+        /* Animation for task cards */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .task-card {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        /* Pulse animation for today indicator */
+        @keyframes pulse-ring {
+            0% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+            }
+        }
+        .today-pulse {
+            animation: pulse-ring 2s infinite;
+        }
+
+        /* Gradient text animation */
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .gradient-animate {
+            background-size: 200% 200%;
+            animation: gradient-shift 3s ease infinite;
+        }
     </style>
 </head>
 
@@ -37,7 +107,7 @@
                     </svg>
                 </button>
                 <div
-                    class="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white grid place-items-center font-bold text-lg shadow-lg shadow-blue-500/30">
+                    class="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white grid place-items-center font-bold text-lg shadow-lg shadow-blue-500/30 gradient-animate">
                     TF
                 </div>
                 <div>
@@ -495,14 +565,6 @@
                             <div
                                 class="flex items-center justify-between pb-5 border-b border-gray-200 dark:border-gray-800">
                                 <div class="flex items-center gap-3">
-                                    <div
-                                        class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 grid place-items-center shadow-lg shadow-blue-500/30">
-                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                                        </svg>
-                                    </div>
                                     <div>
                                         <h3 class="text-lg font-bold text-gray-900 dark:text-white">Filters</h3>
                                         <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -516,6 +578,56 @@
                                     id="clearAllFilters">
                                     Clear
                                 </button>
+                            </div>
+
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <h4
+                                        class="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-pink-500"></div>
+                                        Categories
+                                    </h4>
+                                    <button id="clearCategoryFilters"
+                                        class="text-xs font-semibold text-pink-600 hover:text-pink-700 dark:text-pink-400 dark:hover:text-pink-300 transition-colors px-2 py-1 rounded-lg hover:bg-pink-50 dark:hover:bg-pink-900/20 opacity-0 pointer-events-none"
+                                        data-has-selection="false">
+                                        Clear
+                                    </button>
+                                </div>
+
+                                <!-- Dropdown Toggle Button -->
+                                <button id="categoryDropdownToggle"
+                                    class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-all text-left flex items-center justify-between group">
+                                    <div class="flex items-center gap-2 flex-1 min-w-0">
+                                        <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                        </svg>
+                                        <span id="categorySelectionText"
+                                            class="text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Select
+                                            categories</span>
+                                        <span id="categorySelectionCount"
+                                            class="hidden ml-auto shrink-0 px-2 py-0.5 rounded-full bg-pink-100 dark:bg-pink-900/30 text-xs font-bold text-pink-700 dark:text-pink-300"></span>
+                                    </div>
+                                    <svg id="categoryDropdownIcon"
+                                        class="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-all shrink-0"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+
+                                <!-- Dropdown Menu -->
+                                <div id="categoryDropdownMenu"
+                                    class="hidden overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xl max-h-64 overflow-y-auto">
+                                    <div id="categoryFilterList" class="p-2">
+
+                                    </div>
+
+                                    <div id="categoryFilterEmpty" class="hidden p-4 text-center">
+                                        <p class="text-xs text-gray-400 dark:text-gray-500">No categories yet</p>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Status Filter - Chip Style -->
@@ -735,62 +847,8 @@
                             <div class="border-t border-gray-100 dark:border-gray-800"></div>
 
                             <!-- Category Filter - Modern Dropdown -->
-                            <div class="space-y-3">
-                                <div class="flex items-center justify-between">
-                                    <h4
-                                        class="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-pink-500"></div>
-                                        Categories
-                                    </h4>
-                                    <button id="clearCategoryFilters"
-                                        class="text-xs font-semibold text-pink-600 hover:text-pink-700 dark:text-pink-400 dark:hover:text-pink-300 transition-colors px-2 py-1 rounded-lg hover:bg-pink-50 dark:hover:bg-pink-900/20 opacity-0 pointer-events-none"
-                                        data-has-selection="false">
-                                        Clear
-                                    </button>
-                                </div>
+                            <!-- Not any more -->
 
-                                <!-- Dropdown Toggle Button -->
-                                <button id="categoryDropdownToggle"
-                                    class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-all text-left flex items-center justify-between group">
-                                    <div class="flex items-center gap-2 flex-1 min-w-0">
-                                        <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                                        </svg>
-                                        <span id="categorySelectionText"
-                                            class="text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Select
-                                            categories</span>
-                                        <span id="categorySelectionCount"
-                                            class="hidden ml-auto shrink-0 px-2 py-0.5 rounded-full bg-pink-100 dark:bg-pink-900/30 text-xs font-bold text-pink-700 dark:text-pink-300"></span>
-                                    </div>
-                                    <svg id="categoryDropdownIcon"
-                                        class="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-all shrink-0"
-                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </button>
-
-                                <!-- Dropdown Menu -->
-                                <div id="categoryDropdownMenu"
-                                    class="hidden overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xl max-h-64 overflow-y-auto">
-                                    <div id="categoryFilterList" class="p-2">
-                                        <!-- Categories will be dynamically inserted here -->
-                                        <!-- Example structure:
-                        <label class="category-filter-item flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-all group">
-                            <input type="checkbox" class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-pink-600 focus:ring-2 focus:ring-pink-500 focus:ring-offset-0" data-filter-category="work">
-                            <div class="w-3 h-3 rounded-full shrink-0" style="background: #3B82F6;"></div>
-                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1 truncate">Work</span>
-                            <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 shrink-0">12</span>
-                        </label>
-                        -->
-                                    </div>
-                                    <div id="categoryFilterEmpty" class="hidden p-4 text-center">
-                                        <p class="text-xs text-gray-400 dark:text-gray-500">No categories yet</p>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </aside>
 
@@ -824,8 +882,11 @@
                                             d="M15 19l-7-7 7-7" />
                                     </svg>
                                 </button>
-                                <span id="calCurrentMonth" class="text-sm font-bold min-w-[140px] text-center">December
-                                    2024</span>
+                                <div class="flex items-center gap-2">
+                                    <span id="calCurrentMonth" class="text-sm font-bold min-w-[140px] text-center">December
+                                        2024</span>
+                                    <span id="weekIndicator" class="text-xs font-medium text-gray-500 dark:text-gray-400"></span>
+                                </div>
                                 <button id="calNextBtn"
                                     class="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -902,7 +963,7 @@
                                 <div class="text-center">
                                     <p class="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-1"
                                         id="selectedDayName">Today</p>
-                                    <p class="text-4xl font-bold text-gray-900 dark:text-white mb-1"
+                                    <p class="text-4xl font-bold text-gray-900 dark:text-white mb-1 today-pulse"
                                         id="selectedDayNumber">16</p>
                                     <p class="text-sm text-gray-600 dark:text-gray-400" id="selectedMonthYear">December
                                         2024</p>
@@ -932,6 +993,10 @@
                                                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                             </svg>
                                             <p class="text-sm font-medium">No tasks for this day</p>
+                                            <button class="mt-2 text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold" 
+                                                    onclick="openNewTaskForDate(new Date())">
+                                                + Add Task
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -1019,6 +1084,13 @@
 
     <!-- Toasts -->
     <div id="toastStack" class="fixed bottom-6 right-6 z-50 space-y-3"></div>
+
+    <!-- Task Context Menu -->
+    <div id="taskContextMenuTemplate" style="display: none;">
+        <div id="taskContextMenu" class="fixed z-50 w-48 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-xl p-2">
+            <!-- Content will be dynamically inserted -->
+        </div>
+    </div>
 </body>
 <script type="module" src="script.js"></script>
 

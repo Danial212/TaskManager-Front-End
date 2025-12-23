@@ -3,8 +3,10 @@ import { getTasks, createTask, updateTask, deleteTask, getCategories, createCate
 export {
     DomainURL, REFRESH_TOKEN, ACCESS_TOKEN, PRIORITY_BADGE, STATUS_LABEL, STATUS_LABEL_Array, PRIORITY_LABEL,
     GetStatusLabel, $, $$, fmtDate, sameDay, todayISO, getTextColor, getLuminance, taskDone, hexToRgb,
-    fetchState, getCachdData, saveStateIntoCache, fetchNewData, state, setCookies, getCookies, removeCookies
+    fetchState, getCachdData, saveStateIntoCache, fetchNewData, state, setCookies, getCookies, removeCookies,
+    getDayName, getMonthYear, getDaysInMonth, getFirstDayOfMonth
 }
+
 
 
 const DomainURL = 'http://127.0.0.1:8000/'
@@ -160,4 +162,29 @@ function getLuminance(r, g, b) {
         return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
     });
     return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+}
+
+
+// Get day name (Monday, Tuesday, etc.)
+function getDayName(date) {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[date.getDay()];
+}
+
+// Get month and year string
+function getMonthYear(date) {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'];
+    return `${months[date.getMonth()]} ${date.getFullYear()}`;
+}
+
+
+// Get number of days in month
+function getDaysInMonth(year, month) {
+    return new Date(year, month + 1, 0).getDate();
+}
+
+// Get first day of month (0 = Sunday)
+function getFirstDayOfMonth(year, month) {
+    return new Date(year, month, 1).getDay();
 }
