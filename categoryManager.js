@@ -2,6 +2,7 @@
 import { deleteCategoryAPI, createCategories, updateCategories } from "./utills.js";
 import { fetchNewData, state, toast } from "./sharedData.js";
 import { openModal, closeModal, deleteConfirmMenu } from "./renderTemplates.js";
+import { fetchUpdate, updateCategoryLocaly, deleteCategoryLocaly, createCategoryLocaly, FetchModes } from "./script.js"
 export { onCategoriesRouteActive }
 
 // ============================================
@@ -509,17 +510,15 @@ if (typeof window !== 'undefined') {
 }
 
 async function deleteCategory(catID) {
-    await deleteCategoryAPI(catID);
-    await fetchNewData();
-    await renderCategories();
+    await fetchUpdate(null, catID, deleteCategoryAPI, updateCategoryLocaly, FetchModes.UPDATE)
+    
     updateCategoryStats();
     updateAllCategoryDropdowns();
 }
 
 async function saveCategory(id, category) {
-    await updateCategories(category, id);
-    await fetchNewData();
-    await renderCategories();
+    await fetchUpdate(category, id, updateCategories, updateCategoryLocaly, FetchModes.UPDATE)
+    
     updateCategoryStats();
     updateAllCategoryDropdowns();
 }
@@ -528,9 +527,8 @@ async function saveCategory(id, category) {
  * @param {object} category - Object in dictionary format: {x, y, z, ...}
  */
 async function createCategory(category) {
-    await createCategories(category)
-    await fetchNewData();
-    await renderCategories();
+    await fetchUpdate(category, -1, createCategories, createCategoryLocaly, FetchModes.CREATE)
+
     updateCategoryStats();
     updateAllCategoryDropdowns();
 }

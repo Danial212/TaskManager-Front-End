@@ -1,7 +1,7 @@
 import {
   PRIORITY_BADGE, STATUS_LABEL, STATUS_LABEL_Array, PRIORITY_LABEL, GetStatusLabel, $, $$, fmtDate, todayISO, getTextColor
   , fetchState, getCachdData, saveStateIntoCache, fetchNewData, state,
-  
+
 } from "./sharedData.js";
 import { getTasks, createTask, updateTask, deleteTask, getCategories, createCategories, updateCategories } from "./utills.js";
 export { deleteConfirmMenu, settingsSectionTemplate, settingsSelectTemplate, settingsToggleTemplate, render_mono_category, render_mono_calander_day, taskItemTemplate, taskItemTemplate_complete, renderCategories, taskForm, openNewCategory, /*openEditTask, openNewTask,*/ closeModal, openModal }
@@ -9,6 +9,16 @@ export { deleteConfirmMenu, settingsSectionTemplate, settingsSelectTemplate, set
 
 async function taskItemTemplate(data, t, taskDone) {
   const cat = data.categories.find(c => c.id === t.category);
+
+  const categoryBadge = document.createElement('span');
+  categoryBadge.className = "inline-flex font-semibold items-center text-xs rounded-lg px-3 py-1";
+  categoryBadge.textContent = 'No Category';
+  if (cat) {
+    categoryBadge.style.backgroundColor = cat.color;
+    categoryBadge.style.color = getTextColor(cat.color);
+    categoryBadge.textContent = cat.title;
+  }
+
 
   return `
       <li class="py-4 flex gap-4 group hover:bg-gray-50 dark:hover:bg-gray-800/30 -mx-2 px-2 rounded-xl transition-colors">
@@ -34,30 +44,28 @@ async function taskItemTemplate(data, t, taskDone) {
               </svg>
               ${STATUS_LABEL[t.status]}
             </span>
-            <span class="inline-flex font-semibold items-center text-xs rounded-lg px-3 py-1" 
-                  style="background-color: ${cat.color}; color: ${getTextColor(cat.color)}">
-              ${cat.title || ''}
-            </span>
-          </div>
-        </div>
-        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button class="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition-colors" data-action="edit" data-id="${t.id}" title="Edit task">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-            </svg>
-          </button>
-          <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-action="move" data-id="${t.id}" title="Move task">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
-            </svg>
-          </button>
-          <button class="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-colors" data-action="delete" data-id="${t.id}" title="Delete task">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-            </svg>
-          </button>
-        </div>
-      </li>`;
+            ${categoryBadge.outerHTML}
+
+          </div >
+        </div >
+  <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+    <button class="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition-colors" data-action="edit" data-id="${t.id}" title="Edit task">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+      </svg>
+    </button>
+    <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-action="move" data-id="${t.id}" title="Move task">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+      </svg>
+    </button>
+    <button class="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-colors" data-action="delete" data-id="${t.id}" title="Delete task">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      </svg>
+    </button>
+  </div>
+      </li > `;
 }
 
 
@@ -327,7 +335,7 @@ function deleteConfirmMenu(task = true, subjectTitle) {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                     </svg>
                 </div>
-                <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Delete Category?</h4>
+                <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Delete ${task? 'Task': 'Category'}?</h4>
                 <p class="text-gray-600 dark:text-gray-400 mb-4">Are you sure you want to delete <strong>"${subjectTitle}"</strong>? This action cannot be undone.</p>
                 <div class="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

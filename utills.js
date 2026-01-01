@@ -22,15 +22,17 @@ async function createTask(task) {
             headers: header
         }
     );
+
     return response;
 }
 
-async function updateTask(task, id) {
+async function updateTask(id, task) {
     const tasksURL = DomainURL + 'tasks/' + id + '/';
     const header = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
     };
+
     const response = await authenticatedFetch(tasksURL, {
         method: 'PATCH',
         body: JSON.stringify(task),
@@ -45,13 +47,17 @@ async function deleteTask(id) {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
     };
-    try {
-        const response = await authenticatedFetch(tasksURL, {
-            method: 'DELETE',
-        });
-    } catch (exp) {
-        console.error('Errror:', exp);
-    }
+
+    // console.log("Deleting task ID:", id);
+    // console.log("Full URL:", tasksURL);
+
+    const response = await authenticatedFetch(tasksURL, {
+        method: 'DELETE',
+        headers: header
+    });
+
+    console.log(response);
+
     return response;
 }
 
@@ -75,7 +81,7 @@ async function createCategories(category) {
 }
 
 //  Must be completed
-async function updateCategories(category, id) {
+async function updateCategories(id, category) {
     const categoryURl = DomainURL + 'categories/' + id + '/';
     const header = {
         'Content-Type': 'application/json',

@@ -36,7 +36,7 @@ function GetStatusLabel(status) {
  * Data Layer
  ********************/
 const STORAGE_KEY = 'taskflow:v1';
-const STORAGE_DURATION = 5 * 60 * 1000;
+const STORAGE_DURATION = 5 * 60 * 1000; //  5 mintues
 
 // Complete cookie functions
 function setCookies(name, value, days = 7) {
@@ -65,36 +65,7 @@ function removeCookies() {
 }
 
 
-/********************
- * Helpers
-********************/
-function addDays(n) { const d = new Date(); d.setDate(d.getDate() + n); d.setHours(12, 0, 0, 0); return d.toISOString(); }
-//  Selects only one object with the given detail
-const $ = sel => document.querySelector(sel);
-//  Selects an array of objects with the given detail
-const $$ = sel => Array.from(document.querySelectorAll(sel));
-const fmtDate = iso => new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-const todayISO = () => { const d = new Date(); d.setHours(12, 0, 0, 0); return d.toISOString(); };
-function sameDay(a, b) { return a.getFullYear() == b.getFullYear() && a.getMonth() == b.getMonth() && a.getDate() == b.getDate(); }
-
-async function state(fetchUser = false, fetchCategory = true, fetchTasks = true) {
-    let data = getCachdData()
-    if (data != null)
-        return data;
-
-    data = await fetchState(fetchUser, fetchCategory, fetchTasks);
-    saveStateIntoCache(data, Date.now())
-    return data;
-}
-
-// Re-fetch all the data, even if they exist
-async function fetchNewData() {
-    if (IGNORE_REFRESH_FETCH)
-        return getCachdData()
-    const data = await fetchState();
-    saveStateIntoCache(data, Date.now())
-    return data;
-}
+// #region Local Storage
 
 function saveStateIntoCache(data, time) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -103,21 +74,22 @@ function saveStateIntoCache(data, time) {
 }
 
 async function cachedRawData_JSON() {
-    let data = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return (data | (await fetchNewData()))
+    let cachData = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    return cachData ?? await fetchNewData();
 }
 async function cachedRawData_user() {
-    return (await cachedRawData_JSON())['data'].user;
+    return (await cachedRawData_JSON()).data.user;
 }
 async function cachedRawData_category() {
-    return (await cachedRawData_JSON())['data'].categories;
+    return (await cachedRawData_JSON()).data.categories;
 }
 async function cachedRawData_task() {
-    return (await cachedRawData_JSON())['data'].tasks;
+    return (await cachedRawData_JSON()).data.tasks;
 }
 
-function getCachdData() {
-    let cached = cachedRawData_JSON();
+//  Check if valid chach exist
+async function getCachdData() {
+    let cached = await cachedRawData_JSON();
 
     if (cached) {
         const { data, time } = cached;
@@ -129,25 +101,20 @@ function getCachdData() {
     return null;
 }
 
-async function fetchState(fetchUser = true, fetchCategory = true, fetchTasks = true) {
-    let currentUser = fetchUser ? await getUser() : await cachedRawData_user();
-    let categories = fetchCategory ? await getCategories() : await cachedRawData_category();
-    let tasks = fetchTasks ? await getTasks() : await cachedRawData_task();
 
-    let user = { name: currentUser.username, email: currentUser.email };
-
-    let data =
-    {
-        user,
-        categories,
-        tasks
-    };
-    return data;
-}
+//#endregion
 
 
+// #region  Helpers
 
-
+function addDays(n) { const d = new Date(); d.setDate(d.getDate() + n); d.setHours(12, 0, 0, 0); return d.toISOString(); }
+//  Selects only one object with the given detail
+const $ = sel => document.querySelector(sel);
+//  Selects an array of objects with the given detail
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+const fmtDate = iso => new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+const todayISO = () => { const d = new Date(); d.setHours(12, 0, 0, 0); return d.toISOString(); };
+function sameDay(a, b) { return a.getFullYear() == b.getFullYear() && a.getMonth() == b.getMonth() && a.getDate() == b.getDate(); }
 
 function getTextColor(bgColor) {
     const rgb = hexToRgb(bgColor);
@@ -180,6 +147,53 @@ function getLuminance(r, g, b) {
     return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
 }
 
+//#endregion
+
+
+// #region Fetch & API Interfaces
+
+async function state(fetchUser = false, fetchCategory = false, fetchTasks = false) {
+    let data = await getCachdData()
+    if (data != null)
+        return data;
+
+    data = await fetchState(fetchUser, fetchCategory, fetchTasks);
+    saveStateIntoCache(data, Date.now())
+    return data;
+}
+
+// Re-fetch all the data, even if they exist
+async function fetchNewData() {
+    if (IGNORE_REFRESH_FETCH)
+        return getCachdData()
+    const data = await fetchState(true, true, true);
+    saveStateIntoCache(data, Date.now())
+    return data;
+}
+
+let time = 0
+async function fetchState(fetchUser = true, fetchCategory = true, fetchTasks = true) {
+    console.log(time++, fetchUser, fetchCategory, fetchTasks);
+
+    let currentUser = fetchUser ? await getUser() : await cachedRawData_user();
+    let categories = fetchCategory ? await getCategories() : await cachedRawData_category();
+    let tasks = fetchTasks ? await getTasks() : await cachedRawData_task();
+
+    let user = { name: currentUser.username, email: currentUser.email };
+
+    let data =
+    {
+        user,
+        categories,
+        tasks
+    };
+    return data;
+}
+
+//#endregion
+
+
+// #region Date and Timing
 
 // Get day name (Monday, Tuesday, etc.)
 function getDayName(date) {
@@ -204,6 +218,10 @@ function getDaysInMonth(year, month) {
 function getFirstDayOfMonth(year, month) {
     return new Date(year, month, 1).getDay();
 }
+
+//#endregion
+
+
 /********************
  * Toasts
  ********************/

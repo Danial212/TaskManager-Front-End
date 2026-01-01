@@ -9,7 +9,7 @@ import {
 import { logged_in, logout_user, navigate_login } from "./user.js";
 import { onCategoriesRouteActive } from "./categoryManager.js";
 import { loadSettings } from "./sharedData.js";
-export { renderAll }
+export { fetchUpdate,renderAll, updateCategoryLocaly, deleteCategoryLocaly, createCategoryLocaly }
 
 // Tailwind config
 tailwind.config = {
@@ -216,10 +216,7 @@ async function renderCalendar() {
             if (draggedTask) {
                 const newDate = new Date(year, month, d);
                 draggedTask.reminder = newDate.toISOString();
-                // const res = await updateTask(draggedTask, draggedTask.id);
-                // if (res)
-                //     await re_RenderAll();
-                await fetchUpdate(draggedTask, draggedTask.id, updateTask, updateTaskLocaly)
+                await fetchUpdate(draggedTask, draggedTask.id, updateTask, updateTaskLocaly, FetchModes.UPDATE)
                 toast(`Task moved to ${fmtDate(newDate)}`);
                 draggedTask = null;
             }
@@ -318,7 +315,7 @@ async function renderMonthCalendar(year, month) {
                 draggedTask.reminder = newDate.toISOString();
                 // await updateTask(draggedTask, draggedTask.id);
                 // await re_RenderAll();
-                await fetchUpdate(draggedTask, draggedTask.id, updateTask, updateTaskLocaly)
+                await fetchUpdate(draggedTask, draggedTask.id, updateTask, updateTaskLocaly, FetchModes.UPDATE)
                 toast(`Task moved to ${fmtDate(newDate)}`);
                 draggedTask = null;
             }
@@ -727,7 +724,7 @@ async function openNewTaskForDate(date = new Date(12, 0, 0, 0)) {
             try {
                 // await createTask(t)
                 // await re_RenderAll()
-                await fetchUpdate(t, null, createTask, createTaskLocaly);
+                await fetchUpdate(t, null, createTask, createTaskLocaly, FetchModes.CREATE);
                 toast('Task created successfully');
             } catch (e) {
                 console.log(e);
@@ -756,7 +753,7 @@ async function openEditTask(id) {
             // const r = await updateTask(t, id);
             // await re_RenderAll();
 
-            await fetchUpdate(t, id, updateTask, updateTaskLocaly)
+            await fetchUpdate(t, id, updateTask, updateTaskLocaly, FetchModes.UPDATE)
 
             toast('Task updated successfully');
         }
@@ -765,43 +762,133 @@ async function openEditTask(id) {
 
 //#region Datas Local Changes
 // The first argument is ID and secound is the updated field
-async function createCategoryLocaly(id, category) { }
-async function updateCategoryLocaly(id, category) { }
-async function deleteCategoryLocaly(id, category) { }
-async function createTaskLocaly(id, task) { }
-async function deleteTaskLocaly(id, task) { }
-async function updateTaskLocaly(id, updatedFields) {
+
+async function createCategoryLocaly(category) {
     const currentState = await state();
-    const tasks = currentState.tasks;
+    const categories = [...currentState.categories]; // clone
 
-    const index = tasks.find(t => t.id === id);
+    categories.push({ ...category });
 
+    const updatedData = { ...currentState, categories };
+    saveStateIntoCache(updatedData, Date.now());
+}
+
+async function updateCategoryLocaly(id, category) {
+    const currentState = await state();
+    const categories = [...currentState.categories];
+
+    const index = categories.findIndex(c => c.id == id);
     if (index === -1) return;
 
-    tasks[index] = {
-        ...tasks[index],
-        ...updatedFields
-    };
-    const updatedData = { ...currentState, tasks };
-    console.log(updatedData);
-    
+    const updatedCategory = { ...categories[index], ...category };
+    categories[index] = updatedCategory;
+
+    const updatedData = { ...currentState, categories };
     saveStateIntoCache(updatedData, Date.now());
-    console.log('test bro 2');
 }
+
+async function deleteCategoryLocaly(id) {
+    const currentState = await state();
+    const categories = currentState.categories.filter(c => c.id != id);
+
+    // If no change, skip save
+    if (categories.length === currentState.categories.length) return;
+
+    const updatedData = { ...currentState, categories };
+    saveStateIntoCache(updatedData, Date.now());
+}
+
+async function createTaskLocaly(task) {
+    const currentState = await state();
+    const tasks = [...currentState.tasks];
+
+    tasks.push({ ...task });
+
+    const updatedData = { ...currentState, tasks };
+    saveStateIntoCache(updatedData, Date.now());
+}
+
+async function deleteTaskLocaly(id) {
+    const currentState = await state();
+    const tasks = currentState.tasks.filter(t => t.id != id);
+
+    if (tasks.length === currentState.tasks.length) return; // nothing removed
+
+    const updatedData = { ...currentState, tasks };
+    saveStateIntoCache(updatedData, Date.now());
+}
+
+async function updateTaskLocaly(id, updatedFields) {
+    const currentState = await state();
+    const tasks = [...currentState.tasks]; // clone array to avoid reference issues
+
+    const index = tasks.findIndex(t => t.id == id);
+    if (index === -1) return;
+
+    const updatedTask = { ...tasks[index], ...updatedFields };
+    tasks[index] = updatedTask;
+
+    const updatedData = { ...currentState, tasks };
+
+    saveStateIntoCache(updatedData, Date.now());
+}
+
+
 //#endregion
 
 
+export const FetchModes = {
+    CREATE: 'create',
+    DELETE: 'delete',
+    UPDATE: 'update',
+};
+
 /**
- * 
  * @param object The object(task, category) we want to do something on it
  * @param id First parameter's ID
  * @param {Function} serverFunction Function that commucates to API, must return HttpResponse
  * @param {Function} clientFunction Function that applies the changes locally to cached Memmory
+ * @param {int} mode The change's type we're going to apply, based on 'FetchModes'
  */
-async function fetchUpdate(object, id, serverFunction, clientFunction) {
+async function fetchUpdate(object = null, id = -1, serverFunction, clientFunction, mode = FetchModes.UPDATE) {
+
+    console.log('mode:', mode);
+
     try {
-        await serverFunction(object, id);
-        await clientFunction(id, object);
+        let response;
+        switch (mode) {
+            case FetchModes.CREATE:
+                response = await serverFunction(object);
+                break;
+            case FetchModes.DELETE:
+                response = await serverFunction(id);
+                break;
+            case FetchModes.UPDATE:
+                response = await serverFunction(id, object);
+                break;
+        }
+
+        if (!response.ok)
+            throw new Error("Error in API Communcation");
+
+        let retunredObject = null;
+        // Some response don't return an json object(like Delete_204)
+        try {
+            retunredObject = await response.json();
+        } catch (err) { /* Do Nothing */ }
+
+        switch (mode) {
+            case FetchModes.CREATE:
+                await clientFunction(retunredObject);
+                break;
+            case FetchModes.DELETE:
+                await clientFunction(id);
+                break;
+            case FetchModes.UPDATE:
+                await clientFunction(id, retunredObject);
+                break;
+        }
+
         re_RenderAll();
 
     } catch (error) {
@@ -865,10 +952,7 @@ async function confirmDeleteTask(taskId) {
         bodyHTML: deleteConfirmMenu(true, task.title),
         async onSubmit() {
             data.tasks = data.tasks.filter(t => t.id != taskId);
-            // await deleteTask(taskId);
-            // await fetchNewData();
-            // await renderAll();
-            await fetchUpdate(task, taskId, deleteTask, deleteTaskLocaly);
+            await fetchUpdate(task, taskId, deleteTask, deleteTaskLocaly, FetchModes.DELETE);
             toast('Task deleted successfully');
             return true;
         }
@@ -942,7 +1026,7 @@ async function enableDnD() {
                 t.status = st.trim();
                 // await updateTask(t, id);
                 // await re_RenderAll()
-                await fetchUpdate(t, id, updateTask, updateTaskLocaly);
+                await fetchUpdate(t, id, updateTask, updateTaskLocaly, FetchModes.UPDATE);
 
                 await renderKanbanFull();
                 toast('Task moved to ' + col.dataset.status);
@@ -996,7 +1080,7 @@ const TaskActions = {
 
         // await updateTask(task, taskId);
         // await re_RenderAll();
-        await fetchUpdate(task, taskId, updateTask, updateTaskLocaly);
+        await fetchUpdate(task, taskId, updateTask, updateTaskLocaly, FetchModes.UPDATE);
 
         toast(`Moved to ${STATUS_LABEL[task.status]}`);
     },
@@ -1011,7 +1095,7 @@ const TaskActions = {
 
         // await updateTask(task, taskId);
         // await re_RenderAll();
-        await fetchUpdate(task, taskId, updateTask, updateTaskLocaly);
+        await fetchUpdate(task, taskId, updateTask, updateTaskLocaly, FetchModes.UPDATE);
     },
 
     async handleTitleEdit(taskId, newTitle) {
@@ -1024,7 +1108,7 @@ const TaskActions = {
 
         // await updateTask(task, taskId);
         // await re_RenderAll();
-        await fetchUpdate(task, taskId, updateTask, updateTaskLocaly);
+        await fetchUpdate(task, taskId, updateTask, updateTaskLocaly, FetchModes.UPDATE);
     }
 };
 
@@ -1561,9 +1645,7 @@ async function wire() {
             const id = txtTitle.dataset.id;
             const t = data.tasks.find(x => x.id == id);
             t.title = txtTitle.textContent;
-            // await updateTask(t, id);
-            // await re_RenderAll();
-            await fetchUpdate(t, id, updateTask, updateTaskLocaly);
+            await fetchUpdate(t, id, updateTask, updateTaskLocaly, FetchModes.UPDATE);
         }
     })
 
@@ -1576,6 +1658,7 @@ async function wire() {
 
     $('#taskList').addEventListener('click', async e => {
         const data = await state();
+
         const btn = e.target.closest('button, input[type="checkbox"]');
 
         if (btn) {
@@ -1591,18 +1674,11 @@ async function wire() {
                     return x.id == id
                 });
                 t.status = nextStatus(t.status);
-                // await updateTask(t, id)
-                // await re_RenderAll();
-                await fetchUpdate(t, id, updateTask, updateTaskLocaly);
+                await fetchUpdate(t, id, updateTask, updateTaskLocaly, FetchModes.UPDATE);
                 toast('Moved to ' + STATUS_LABEL[t.status]);
             }
-            if (btn.dataset.action === 'toggle-complete') {
-                const t = data.tasks.find(x => x.id == id);
-                t.status = GetStatusLabel(btn.checked ? 'Done' : 'inProgress');
-                // await updateTask(t, id);
-                // await re_RenderAll();
-                await fetchUpdate(t, id, updateTask, updateTaskLocaly);
-            }
+            if (btn.dataset.action === 'toggle-complete')
+                await taskStatusUpdate(id, data, GetStatusLabel(btn.checked ? 'Done' : 'inProgress'))
         }
     });
 
@@ -1676,6 +1752,26 @@ function toggleTheme() {
 
 function logout() {
     logout_user();
+}
+
+
+async function taskStatusUpdate(id, data, status) {
+    const t = data?.tasks?.find(x => x.id == id);
+
+    // Data is corrupted or missing -> refetch
+    if (!t || !('status' in t)) {
+        data = await fetchNewData();
+        t = data.tasks.find(x => x.id == id);
+
+        if (!t) {
+            console.error(`Task ${id} not found even after refresh`);
+            return; // give up gracefully
+        }
+    }
+
+    // Now safe to update
+    t.status = status;
+    await fetchUpdate(t, id, updateTask, updateTaskLocaly, FetchModes.UPDATE);
 }
 
 
