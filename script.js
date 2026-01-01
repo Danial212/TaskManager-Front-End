@@ -7,9 +7,9 @@ import {
     toast
 } from "./sharedData.js";
 import { logged_in, logout_user, navigate_login } from "./user.js";
-import { onCategoriesRouteActive } from "./categoryManager.js";
+import { initCategoriesPage, onCategoriesRouteActive, updateAllCategoryDropdowns, updateCategoryStats } from "./categoryManager.js";
 import { loadSettings } from "./sharedData.js";
-export { fetchUpdate,renderAll, updateCategoryLocaly, deleteCategoryLocaly, createCategoryLocaly }
+export { fetchUpdate, renderAll, updateCategoryLocaly, deleteCategoryLocaly, createCategoryLocaly }
 
 // Tailwind config
 tailwind.config = {
@@ -68,16 +68,8 @@ async function renderAll() {
 }
 
 async function re_RenderAll() {
-    const data = await state();
-
-    renderStats();
-    renderTasks();
-    renderKanbanPreview();
-    renderCategories();
-    renderCalendar();
-    $('#userName').textContent = data.user.name;
-    $('#userEmail').textContent = data.user.email;
-    $('#countAll').textContent = data.tasks.length;
+    routeTo(currentRoutePage());
+    // await renderAll()
 }
 
 async function renderStats() {
@@ -173,8 +165,10 @@ function updateWeekIndicator() {
 
 async function renderCalendar() {
     const data = await state();
+    
     const year = cal.getFullYear();
     const month = cal.getMonth();
+    
     $('#calTitle').textContent = cal.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
     const first = new Date(year, month, 1);
     const last = new Date(year, month + 1, 0);
@@ -190,7 +184,7 @@ async function renderCalendar() {
         cell.className = 'group relative p-3 rounded-xl border border-gray-200/60 dark:border-gray-700/50 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-md dark:hover:shadow-gray-900/50 transition-all duration-200 bg-white dark:bg-gray-800/50 hover:bg-gradient-to-br hover:from-gray-50 hover:to-white dark:hover:from-gray-800 dark:hover:to-gray-800/80 backdrop-blur-sm';
         cell.innerHTML = `<div class="font-semibold text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">${d}</div>${count ? `<div class='mt-1.5 text-xs font-medium px-2.5 py-1 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-sm dark:shadow-blue-500/20'>${count}</div>` : ''}`;
 
-        // Add double-click to create task
+        // double-click to create task
         cell.addEventListener('dblclick', (e) => {
             e.stopPropagation();
             openNewTaskForDate(dayDate);
@@ -697,7 +691,9 @@ function openTaskDetails(taskId) {
 }
 
 // Function to open new task modal with pre-filled date
-async function openNewTaskForDate(date = new Date(12, 0, 0, 0)) {
+async function openNewTaskForDate(date = new Date()) {
+    console.log('we have', date);
+    
     const data = await state();
 
     openModal({
@@ -851,11 +847,9 @@ export const FetchModes = {
  * @param {int} mode The change's type we're going to apply, based on 'FetchModes'
  */
 async function fetchUpdate(object = null, id = -1, serverFunction, clientFunction, mode = FetchModes.UPDATE) {
-
-    console.log('mode:', mode);
-
+    let response;
     try {
-        let response;
+
         switch (mode) {
             case FetchModes.CREATE:
                 response = await serverFunction(object);
@@ -868,32 +862,37 @@ async function fetchUpdate(object = null, id = -1, serverFunction, clientFunctio
                 break;
         }
 
-        if (!response.ok)
-            throw new Error("Error in API Communcation");
-
-        let retunredObject = null;
-        // Some response don't return an json object(like Delete_204)
-        try {
-            retunredObject = await response.json();
-        } catch (err) { /* Do Nothing */ }
-
-        switch (mode) {
-            case FetchModes.CREATE:
-                await clientFunction(retunredObject);
-                break;
-            case FetchModes.DELETE:
-                await clientFunction(id);
-                break;
-            case FetchModes.UPDATE:
-                await clientFunction(id, retunredObject);
-                break;
+        if (!response.ok) {
+            if (response.status == 404) {
+                await fetchNewData();
+                re_RenderAll();
+                return;
+            }
+            throw new Error(`Error HTTP Code ${response.status}`);
         }
-
-        re_RenderAll();
-
     } catch (error) {
         console.log('Some Shit Happened: ', error);
     }
+
+    let retunredObject = null;
+    // Some response don't return an json object(like Delete_204)
+    try {
+        retunredObject = await response.json();
+    } catch (err) { /* Do Nothing */ }
+
+    switch (mode) {
+        case FetchModes.CREATE:
+            await clientFunction(retunredObject);
+            break;
+        case FetchModes.DELETE:
+            await clientFunction(id);
+            break;
+        case FetchModes.UPDATE:
+            await clientFunction(id, retunredObject);
+            break;
+    }
+
+    re_RenderAll();
 }
 
 
@@ -1582,7 +1581,18 @@ async function getTaskCountForDate(year, month, day) {
 
 /********************
  * Routing
- ********************/
+********************/
+
+function currentRoutePage() {
+    const activeRoute = [...document.querySelectorAll('[id^="route-"]')]
+        .find(el => !el.classList.contains('hidden'));
+
+    if (!activeRoute) return null;
+
+    return activeRoute.id.replace('route-', '');
+}
+
+
 function routeTo(name) {
     ['dashboard', 'kanban', 'tasks', 'calendar', 'categories', 'settings'].forEach(r => $('#route-' + r).classList.add('hidden'));
     $('#route-' + name).classList.remove('hidden');
@@ -1593,6 +1603,10 @@ function routeTo(name) {
             a.classList.remove('bg-gradient-to-r', 'from-blue-50', 'to-indigo-50', 'dark:from-gray-800', 'dark:to-gray-800/50');
     });
     switch (name) {
+        default:
+        case 'route-dashboard':
+            renderAll();
+            break;
         case 'kanban':
             renderKanbanFull();
             break;
@@ -1611,9 +1625,6 @@ function routeTo(name) {
 
         case 'settings':
             renderSettings();
-            break;
-
-        default:
             break;
     }
 }

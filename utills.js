@@ -48,15 +48,10 @@ async function deleteTask(id) {
         'Accept': 'application/json',
     };
 
-    // console.log("Deleting task ID:", id);
-    // console.log("Full URL:", tasksURL);
-
     const response = await authenticatedFetch(tasksURL, {
         method: 'DELETE',
         headers: header
     });
-
-    console.log(response);
 
     return response;
 }
@@ -103,5 +98,6 @@ async function deleteCategoryAPI(id) {
     const response = await authenticatedFetch(categoryURL, {
         method: 'DELETE',
     });
+    
     return response;
 }

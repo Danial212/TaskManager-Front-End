@@ -30,7 +30,7 @@ let categorySearchTerm = '';
 let categorySortMode = 'name';
 
 // Initialize Categories Page
-async function initCategoriesPage() {
+export async function initCategoriesPage() {
     // Add Category Button
     const addCategoryBtn = document.getElementById('addCategoryBtn');
     if (addCategoryBtn) {
@@ -341,10 +341,10 @@ async function openCategoryModal(category = null) {
                 update.color = color
 
             if (isEdit) {
-                updateCategory(category.id, update);
+                await fetchUpdate(update, category.id, updateCategories, updateCategoryLocaly, FetchModes.UPDATE)
                 toast('Category updated successfully', 'success');
             } else {
-                await createCategory({title, color, description});
+                await fetchUpdate({ title, color, description }, -1, createCategories, createCategoryLocaly, FetchModes.CREATE)
                 toast('Category created successfully', 'success');
             }
 
@@ -368,17 +368,6 @@ async function openCategoryModal(category = null) {
     }, 100);
 }
 
-// Update Category
-async function updateCategory(id, updates) {
-    const data = await state();
-    const categories = data.categories;
-    const index = categories.findIndex(c => c.id === id);
-    if (index !== -1) {
-        categories[index] = { ...categories[index], ...updates };
-        await saveCategory(id, categories[index]);
-    }
-}
-
 // Delete Category
 async function deleteCategoryMenu(id) {
     const data = await state();
@@ -388,16 +377,14 @@ async function deleteCategoryMenu(id) {
     const category = categories.find(c => c.id === id);
     if (!category) return;
 
-    // const taskCount = tasks.filter(t => t.category === id).length;
-
     if (!confirmDeleteCategory(id)) return;
 
     // Remove category from tasks
-    tasks.forEach(task => {
-        if (task.category.id === id) {
-            task.category = null;
-        }
-    });
+    // tasks.forEach(task => {
+    //     if (task.category.id === id) {              <---      TO BE FIXED :))
+    //         task.category = null;
+    //     }
+    // });
 
     toast('Category deleted successfully', 'success');
 }
@@ -414,7 +401,7 @@ async function confirmDeleteCategory(categoryId) {
         title: 'Delete Category',
         bodyHTML: deleteConfirmMenu(false, category.title),
         async onSubmit() {
-            await deleteCategory(categoryId);
+            await fetchUpdate(null, categoryId, deleteCategoryAPI, deleteCategoryLocaly, FetchModes.DELETE)
             toast('Task deleted' + categoryId + ' successfully');
             return true;
         }
@@ -424,7 +411,7 @@ async function confirmDeleteCategory(categoryId) {
 
 
 // Update Category Stats
-async function updateCategoryStats() {
+export async function updateCategoryStats() {
     const totalCount = document.getElementById('totalCategoriesCount');
     const totalTasks = document.getElementById('totalTasksInCategories');
     const mostUsed = document.getElementById('mostUsedCategory');
@@ -486,7 +473,7 @@ function filterTasksByCategory(categoryId) {
 }
 
 // Update all category dropdowns throughout the app
-function updateAllCategoryDropdowns() {
+export function updateAllCategoryDropdowns() {
     // This will refresh category selects in task modals, filters, etc.
     // Call this whenever categories change
     if (window.renderAllTasks) {
@@ -509,26 +496,7 @@ if (typeof window !== 'undefined') {
     window.openCategoryModal = openCategoryModal;
 }
 
-async function deleteCategory(catID) {
-    await fetchUpdate(null, catID, deleteCategoryAPI, updateCategoryLocaly, FetchModes.UPDATE)
-    
-    updateCategoryStats();
-    updateAllCategoryDropdowns();
-}
-
-async function saveCategory(id, category) {
-    await fetchUpdate(category, id, updateCategories, updateCategoryLocaly, FetchModes.UPDATE)
-    
-    updateCategoryStats();
-    updateAllCategoryDropdowns();
-}
 
 /**
  * @param {object} category - Object in dictionary format: {x, y, z, ...}
  */
-async function createCategory(category) {
-    await fetchUpdate(category, -1, createCategories, createCategoryLocaly, FetchModes.CREATE)
-
-    updateCategoryStats();
-    updateAllCategoryDropdowns();
-}
