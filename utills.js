@@ -1,5 +1,5 @@
 import { authenticatedFetch } from "./user.js";
-export { getTasks, createTask, updateTask, deleteTask, getCategories, createCategories, updateCategories };
+export { getTasks, createTask, updateTask, deleteTask, getCategories, createCategories, updateCategories, deleteCategoryAPI };
 
 const DomainURL = 'http://127.0.0.1:8000/'
 
@@ -22,6 +22,7 @@ async function createTask(task) {
             headers: header
         }
     );
+    return response;
 }
 
 async function updateTask(task, id) {
@@ -35,6 +36,7 @@ async function updateTask(task, id) {
         body: JSON.stringify(task),
         headers: header
     });
+    return response;
 }
 
 async function deleteTask(id) {
@@ -43,9 +45,14 @@ async function deleteTask(id) {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
     };
-    const response = await authenticatedFetch(tasksURL, {
-        method: 'DELETE',
-    });
+    try {
+        const response = await authenticatedFetch(tasksURL, {
+            method: 'DELETE',
+        });
+    } catch (exp) {
+        console.error('Errror:', exp);
+    }
+    return response;
 }
 
 async function getCategories() {
@@ -64,11 +71,12 @@ async function createCategories(category) {
         body: JSON.stringify(category),
         headers: header
     });
+    return response;
 }
 
 //  Must be completed
 async function updateCategories(category, id) {
-    const categoryURl = DomainURL + 'categories/' + id;
+    const categoryURl = DomainURL + 'categories/' + id + '/';
     const header = {
         'Content-Type': 'application/json',
     }
@@ -77,4 +85,17 @@ async function updateCategories(category, id) {
         body: JSON.stringify(category),
         headers: header
     });
+    return response;
+}
+
+async function deleteCategoryAPI(id) {
+    const categoryURL = DomainURL + 'categories/' + id + '/';
+    const header = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+    };
+    const response = await authenticatedFetch(categoryURL, {
+        method: 'DELETE',
+    });
+    return response;
 }

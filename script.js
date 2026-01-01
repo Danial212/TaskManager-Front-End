@@ -1,5 +1,5 @@
 import { getTasks, createTask, updateTask, deleteTask, getCategories, createCategories, updateCategories } from "./utills.js";
-import { settingsSectionTemplate, settingsSelectTemplate, settingsToggleTemplate, render_mono_category, render_mono_calander_day, taskItemTemplate, renderCategories, taskForm, openNewCategory, openEditTask, openNewTask, closeModal, openModal, taskItemTemplate_complete } from "./renderTemplates.js";
+import { settingsSectionTemplate, settingsSelectTemplate, settingsToggleTemplate, render_mono_category, render_mono_calander_day, taskItemTemplate, renderCategories, taskForm, openNewCategory,/* openEditTask, openNewTask,*/ closeModal, openModal, taskItemTemplate_complete, deleteConfirmMenu } from "./renderTemplates.js";
 import {
     PRIORITY_BADGE, STATUS_LABEL, STATUS_LABEL_Array, PRIORITY_LABEL, GetStatusLabel, $, $$, fmtDate, sameDay
     , todayISO, getTextColor, taskDone, hexToRgb, getLuminance
@@ -65,6 +65,19 @@ async function renderAll() {
     $('#userEmail').textContent = data.user.email;
     $('#countAll').textContent = data.tasks.length;
     saveStateIntoCache(data, Date.now());
+}
+
+async function re_RenderAll() {
+    const data = await state();
+
+    renderStats();
+    renderTasks();
+    renderKanbanPreview();
+    renderCategories();
+    renderCalendar();
+    $('#userName').textContent = data.user.name;
+    $('#userEmail').textContent = data.user.email;
+    $('#countAll').textContent = data.tasks.length;
 }
 
 async function renderStats() {
@@ -203,9 +216,10 @@ async function renderCalendar() {
             if (draggedTask) {
                 const newDate = new Date(year, month, d);
                 draggedTask.reminder = newDate.toISOString();
-                await updateTask(draggedTask, draggedTask.id);
-                await fetchNewData();
-                await renderAll();
+                // const res = await updateTask(draggedTask, draggedTask.id);
+                // if (res)
+                //     await re_RenderAll();
+                await fetchUpdate(draggedTask, draggedTask.id, updateTask, updateTaskLocaly)
                 toast(`Task moved to ${fmtDate(newDate)}`);
                 draggedTask = null;
             }
@@ -302,9 +316,9 @@ async function renderMonthCalendar(year, month) {
                 const dateStr = dayCell.getAttribute('data-date');
                 const newDate = new Date(dateStr + 'T00:00:00');
                 draggedTask.reminder = newDate.toISOString();
-                await updateTask(draggedTask, draggedTask.id);
-                await fetchNewData();
-                await renderAll();
+                // await updateTask(draggedTask, draggedTask.id);
+                // await re_RenderAll();
+                await fetchUpdate(draggedTask, draggedTask.id, updateTask, updateTaskLocaly)
                 toast(`Task moved to ${fmtDate(newDate)}`);
                 draggedTask = null;
             }
@@ -560,7 +574,7 @@ function renderDayTasks(tasks) {
                 </svg>
                 <p class="text-sm font-medium">No tasks for this day</p>
                 <button class="mt-2 text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold" 
-                        onclick="openNewTaskForDate(new Date())">
+                        onclick="openNewTaskForDate()">
                     + Add Task
                 </button>
             </div>
@@ -686,7 +700,7 @@ function openTaskDetails(taskId) {
 }
 
 // Function to open new task modal with pre-filled date
-async function openNewTaskForDate(date) {
+async function openNewTaskForDate(date = new Date(12, 0, 0, 0)) {
     const data = await state();
 
     openModal({
@@ -711,9 +725,9 @@ async function openNewTaskForDate(date) {
                 return false;
             }
             try {
-                await createTask(t);
-                await fetchNewData();
-                await renderAll();
+                // await createTask(t)
+                // await re_RenderAll()
+                await fetchUpdate(t, null, createTask, createTaskLocaly);
                 toast('Task created successfully');
             } catch (e) {
                 console.log(e);
@@ -721,6 +735,80 @@ async function openNewTaskForDate(date) {
         }
     });
 }
+
+
+async function openEditTask(id) {
+    const tasks = (await state()).tasks;
+    const t = tasks.find(x => x.id == id);
+    if (!t)
+        return;
+    openModal({
+        title: 'Edit Task',
+        bodyHTML: taskForm(t),
+        async onSubmit() {
+            t.title = $('#f-title').value.trim();
+            t.description = $('#f-desc').value.trim();
+            t.category = $('#f-category').value;
+            if ($('#f-due').value !== "")
+                t.reminder = new Date($('#f-due').value).toISOString();
+            t.status = $('#f-status').value.trim();
+            t.proirity = $('#f-priority').value;
+            // const r = await updateTask(t, id);
+            // await re_RenderAll();
+
+            await fetchUpdate(t, id, updateTask, updateTaskLocaly)
+
+            toast('Task updated successfully');
+        }
+    });
+}
+
+//#region Datas Local Changes
+// The first argument is ID and secound is the updated field
+async function createCategoryLocaly(id, category) { }
+async function updateCategoryLocaly(id, category) { }
+async function deleteCategoryLocaly(id, category) { }
+async function createTaskLocaly(id, task) { }
+async function deleteTaskLocaly(id, task) { }
+async function updateTaskLocaly(id, updatedFields) {
+    const currentState = await state();
+    const tasks = currentState.tasks;
+
+    const index = tasks.find(t => t.id === id);
+
+    if (index === -1) return;
+
+    tasks[index] = {
+        ...tasks[index],
+        ...updatedFields
+    };
+    const updatedData = { ...currentState, tasks };
+    console.log(updatedData);
+    
+    saveStateIntoCache(updatedData, Date.now());
+    console.log('test bro 2');
+}
+//#endregion
+
+
+/**
+ * 
+ * @param object The object(task, category) we want to do something on it
+ * @param id First parameter's ID
+ * @param {Function} serverFunction Function that commucates to API, must return HttpResponse
+ * @param {Function} clientFunction Function that applies the changes locally to cached Memmory
+ */
+async function fetchUpdate(object, id, serverFunction, clientFunction) {
+    try {
+        await serverFunction(object, id);
+        await clientFunction(id, object);
+        re_RenderAll();
+
+    } catch (error) {
+        console.log('Some Shit Happened: ', error);
+    }
+}
+
 
 // Function to show task context menu
 function showTaskContextMenu(e, taskId) {
@@ -772,31 +860,15 @@ async function confirmDeleteTask(taskId) {
 
     if (!task) return;
 
-    // Create confirmation modal
     openModal({
         title: 'Delete Task',
-        bodyHTML: `
-            <div class="text-center py-6">
-                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
-                    <svg class="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
-                </div>
-                <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Delete Task?</h4>
-                <p class="text-gray-600 dark:text-gray-400 mb-4">Are you sure you want to delete <strong>"${task.title}"</strong>? This action cannot be undone.</p>
-                <div class="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <span>Tip: You can also drag tasks to different dates to reschedule them</span>
-                </div>
-            </div>
-        `,
+        bodyHTML: deleteConfirmMenu(true, task.title),
         async onSubmit() {
             data.tasks = data.tasks.filter(t => t.id != taskId);
-            await deleteTask(taskId);
-            await fetchNewData();
-            await renderAll();
+            // await deleteTask(taskId);
+            // await fetchNewData();
+            // await renderAll();
+            await fetchUpdate(task, taskId, deleteTask, deleteTaskLocaly);
             toast('Task deleted successfully');
             return true;
         }
@@ -868,9 +940,10 @@ async function enableDnD() {
             const t = data.tasks.find(x => x.id === id);
             if (t) {
                 t.status = st.trim();
-                await updateTask(t, id);
-                await fetchNewData();
-                await renderAll();
+                // await updateTask(t, id);
+                // await re_RenderAll()
+                await fetchUpdate(t, id, updateTask, updateTaskLocaly);
+
                 await renderKanbanFull();
                 toast('Task moved to ' + col.dataset.status);
             }
@@ -921,9 +994,9 @@ const TaskActions = {
 
         task.status = nextStatus(task.status);
 
-        await updateTask(task, taskId);
-        await fetchNewData();
-        await renderAll();
+        // await updateTask(task, taskId);
+        // await re_RenderAll();
+        await fetchUpdate(task, taskId, updateTask, updateTaskLocaly);
 
         toast(`Moved to ${STATUS_LABEL[task.status]}`);
     },
@@ -936,9 +1009,9 @@ const TaskActions = {
 
         task.status = GetStatusLabel(isChecked ? 'Done' : 'inProgress');
 
-        await updateTask(task, taskId);
-        await fetchNewData();
-        await renderAll();
+        // await updateTask(task, taskId);
+        // await re_RenderAll();
+        await fetchUpdate(task, taskId, updateTask, updateTaskLocaly);
     },
 
     async handleTitleEdit(taskId, newTitle) {
@@ -949,9 +1022,9 @@ const TaskActions = {
 
         task.title = newTitle;
 
-        await updateTask(task, taskId);
-        await fetchNewData();
-        await renderAll();
+        // await updateTask(task, taskId);
+        // await re_RenderAll();
+        await fetchUpdate(task, taskId, updateTask, updateTaskLocaly);
     }
 };
 
@@ -1488,9 +1561,9 @@ async function wire() {
             const id = txtTitle.dataset.id;
             const t = data.tasks.find(x => x.id == id);
             t.title = txtTitle.textContent;
-            await updateTask(t, id);
-            await fetchNewData();
-            await renderAll();
+            // await updateTask(t, id);
+            // await re_RenderAll();
+            await fetchUpdate(t, id, updateTask, updateTaskLocaly);
         }
     })
 
@@ -1518,23 +1591,27 @@ async function wire() {
                     return x.id == id
                 });
                 t.status = nextStatus(t.status);
-                await updateTask(t, id)
-                await fetchNewData();
-                await renderAll();
+                // await updateTask(t, id)
+                // await re_RenderAll();
+                await fetchUpdate(t, id, updateTask, updateTaskLocaly);
                 toast('Moved to ' + STATUS_LABEL[t.status]);
             }
             if (btn.dataset.action === 'toggle-complete') {
                 const t = data.tasks.find(x => x.id == id);
                 t.status = GetStatusLabel(btn.checked ? 'Done' : 'inProgress');
-                await updateTask(t, id);
-                await fetchNewData()
-                await renderAll();
+                // await updateTask(t, id);
+                // await re_RenderAll();
+                await fetchUpdate(t, id, updateTask, updateTaskLocaly);
             }
         }
     });
 
-    $('#newTaskBtn').addEventListener('click', openNewTask);
-    $('#addTaskTop').addEventListener('click', openNewTask);
+    $('#newTaskBtn').addEventListener('click', function (e) {
+        openNewTaskForDate();
+    });
+    $('#addTaskTop').addEventListener('click', function (e) {
+        openNewTaskForDate();
+    });
     $('#newCategoryBtn').addEventListener('click', openNewCategory);
     $('#addCategoryTop').addEventListener('click', openNewCategory);
 
@@ -1555,7 +1632,8 @@ async function wire() {
             $('#searchInput')?.focus();
         }
         if (e.key.toLowerCase() === 'n' && !e.target.matches('input, textarea')) {
-            openNewTask();
+            // openNewTask();
+            openNewTaskForDate();
         }
         if (e.key.toLowerCase() === 'd' && !e.target.matches('input, textarea')) {
             toggleTheme();

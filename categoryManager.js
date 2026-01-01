@@ -1,7 +1,7 @@
 // Add these functions to your script.js file
-
-import { state, toast } from "./sharedData.js";
-import { openModal, closeModal } from "./renderTemplates.js";
+import { deleteCategoryAPI, createCategories, updateCategories } from "./utills.js";
+import { fetchNewData, state, toast } from "./sharedData.js";
+import { openModal, closeModal, deleteConfirmMenu } from "./renderTemplates.js";
 export { onCategoriesRouteActive }
 
 // ============================================
@@ -124,7 +124,7 @@ async function renderCategories() {
             noResultsState.classList.add('hidden');
 
             filtered.forEach(async (cat) => {
-                const p = await createCategoryCard(cat);
+                const p = await addCategoryCard(cat);
                 gridView.appendChild(p);
             });
         }
@@ -145,7 +145,7 @@ async function renderCategories() {
             emptyState.classList.add('hidden');
             noResultsState.classList.add('hidden');
             filtered.forEach(async (cat) => {
-                const categoryTempalte = await createCategoryListItem(cat)
+                const categoryTempalte = await addCategoryListItem(cat)
                 listView.appendChild(categoryTempalte);
             });
         }
@@ -179,7 +179,7 @@ async function sortCategories(cats, mode) {
 }
 
 // Create Category Card (Grid View)
-async function createCategoryCard(category) {
+async function addCategoryCard(category) {
     const template = document.getElementById('categoryCardTemplate');
     const card = template.content.cloneNode(true);
     const container = card.querySelector('.category-card');
@@ -211,7 +211,7 @@ async function createCategoryCard(category) {
     const deleteBtn = card.querySelector('.delete-category-btn');
     deleteBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        deleteCategory(category.id);
+        deleteCategoryMenu(category.id);
     });
 
     // Click to view tasks
@@ -223,7 +223,7 @@ async function createCategoryCard(category) {
 }
 
 // Create Category List Item (List View)
-async function createCategoryListItem(category) {
+async function addCategoryListItem(category) {
     const template = document.getElementById('categoryListItemTemplate');
     const item = template.content.cloneNode(true);
     const container = item.querySelector('.category-list-item');
@@ -257,7 +257,7 @@ async function createCategoryListItem(category) {
     const deleteBtn = item.querySelector('.delete-category-list-btn');
     deleteBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        deleteCategory(category.id);
+        deleteCategoryMenu(category.id);
     });
 
     // Click to view tasks
@@ -318,27 +318,32 @@ async function openCategoryModal(category = null) {
         bodyHTML: modalBody,
         // isEdit? 'Save Changes': 'Create Category',
         async onSubmit() {
-            const name = document.getElementById('categoryNameInput').value.trim();
+            const title = document.getElementById('categoryNameInput').value.trim();
             const description = document.getElementById('categoryDescInput').value.trim();
             const selectedColor = document.querySelector('.color-option.border-gray-900, .color-option.dark\\:border-white');
 
-            if (!name) {
-                toast('Please enter a category name', 'error');
+            if (!title && !description && !selectedColor)
                 return;
-            }
 
-            if (!selectedColor) {
-                toast('Please select a color', 'error');
-                return;
-            }
+            if (!isEdit && !title)
+                toast("Title can't be empty")
+
 
             const color = selectedColor.dataset.color;
 
+            let update = {}
+            if (title)
+                update.title = title
+            if (description)
+                update.description = description
+            if (color)
+                update.color = color
+
             if (isEdit) {
-                updateCategory(category.id, { name, description, color });
+                updateCategory(category.id, update);
                 toast('Category updated successfully', 'success');
             } else {
-                await addCategory(name, color, description);
+                await createCategory({title, color, description});
                 toast('Category created successfully', 'success');
             }
 
@@ -362,23 +367,6 @@ async function openCategoryModal(category = null) {
     }, 100);
 }
 
-// Add Category
-async function addCategory(name, color, description = '') {
-    const newCategory = {
-        id: `cat_${Date.now()}`,
-        name,
-        color,
-        description,
-        createdAt: new Date().toISOString()
-    };
-
-    await createCategory(newCategory);
-    await saveCategory();
-    await renderCategories();
-    updateCategoryStats();
-    updateAllCategoryDropdowns();
-}
-
 // Update Category
 async function updateCategory(id, updates) {
     const data = await state();
@@ -386,25 +374,22 @@ async function updateCategory(id, updates) {
     const index = categories.findIndex(c => c.id === id);
     if (index !== -1) {
         categories[index] = { ...categories[index], ...updates };
-        await saveCategory();
-        await renderCategories();
-        updateCategoryStats();
-        updateAllCategoryDropdowns();
+        await saveCategory(id, categories[index]);
     }
 }
 
 // Delete Category
-async function deleteCategory(id) {
+async function deleteCategoryMenu(id) {
+    const data = await state();
+    const categories = data.categories;
+    const tasks = data.tasks;
+
     const category = categories.find(c => c.id === id);
     if (!category) return;
 
-    const taskCount = tasks.filter(t => t.category === id).length;
+    // const taskCount = tasks.filter(t => t.category === id).length;
 
-    const message = taskCount > 0
-        ? `Are you sure you want to delete "${category.title}"? This will remove the category from ${taskCount} task(s).`
-        : `Are you sure you want to delete "${category.title}"?`;
-
-    if (!confirm(message)) return;
+    if (!confirmDeleteCategory(id)) return;
 
     // Remove category from tasks
     tasks.forEach(task => {
@@ -413,17 +398,29 @@ async function deleteCategory(id) {
         }
     });
 
-    // Remove category
-    const index = categories.findIndex(c => c.id === id);
-    if (index !== -1) {
-        categories.splice(index, 1);
-        await saveCategory();
-        await renderCategories();
-        updateCategoryStats();
-        updateAllCategoryDropdowns();
-        toast('Category deleted successfully', 'success');
-    }
+    toast('Category deleted successfully', 'success');
 }
+
+// Function to confirm delete category
+async function confirmDeleteCategory(categoryId) {
+    const data = await state();
+    const category = data.categories.find(t => t.id == categoryId);
+
+    if (!category) return;
+
+    // Create confirmation modal
+    openModal({
+        title: 'Delete Category',
+        bodyHTML: deleteConfirmMenu(false, category.title),
+        async onSubmit() {
+            await deleteCategory(categoryId);
+            toast('Task deleted' + categoryId + ' successfully');
+            return true;
+        }
+    });
+    return false;
+}
+
 
 // Update Category Stats
 async function updateCategoryStats() {
@@ -511,12 +508,29 @@ if (typeof window !== 'undefined') {
     window.openCategoryModal = openCategoryModal;
 }
 
-async function saveCategory() {
-    console.log('save shit must happens here');
-        
+async function deleteCategory(catID) {
+    await deleteCategoryAPI(catID);
+    await fetchNewData();
+    await renderCategories();
+    updateCategoryStats();
+    updateAllCategoryDropdowns();
 }
 
+async function saveCategory(id, category) {
+    await updateCategories(category, id);
+    await fetchNewData();
+    await renderCategories();
+    updateCategoryStats();
+    updateAllCategoryDropdowns();
+}
+
+/**
+ * @param {object} category - Object in dictionary format: {x, y, z, ...}
+ */
 async function createCategory(category) {
-    console.log('save shit must happens here');
-    
+    await createCategories(category)
+    await fetchNewData();
+    await renderCategories();
+    updateCategoryStats();
+    updateAllCategoryDropdowns();
 }

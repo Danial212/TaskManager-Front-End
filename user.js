@@ -17,6 +17,10 @@ async function getAccessToken() {
     return getCookies(ACCESS_TOKEN);
 }
 
+
+/**
+ * Check if the given JWT token is expired/invalid
+ */
 function isTokenExpired(token) {
     if (token == null)
         return true;
@@ -107,7 +111,7 @@ async function updateAccessToken() {
 function logged_in() {
     const cookies = document.cookie.split(';');
     console.log(cookies.length);
-    
+
     cookies.forEach(cookie => {
         let [name, value] = cookie.split('=');
         if ((name == ACCESS_TOKEN || name == REFRESH_TOKEN) && (value == '' || value == null))

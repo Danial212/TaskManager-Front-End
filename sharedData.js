@@ -5,7 +5,7 @@ export {
     GetStatusLabel, $, $$, fmtDate, sameDay, todayISO, getTextColor, getLuminance, taskDone, hexToRgb,
     fetchState, getCachdData, saveStateIntoCache, fetchNewData, state, setCookies, getCookies, removeCookies,
     getDayName, getMonthYear, getDaysInMonth, getFirstDayOfMonth,
-    toast,loadSettings
+    toast, loadSettings
 }
 
 
@@ -13,7 +13,7 @@ export {
 const DomainURL = 'http://127.0.0.1:8000/'
 const REFRESH_TOKEN = 'refresh_token'
 const ACCESS_TOKEN = 'access_token'
-const IGNORE_REFRESH_FETCH = true
+const IGNORE_REFRESH_FETCH = false
 
 
 const PRIORITY_BADGE = {
@@ -77,16 +77,17 @@ const fmtDate = iso => new Date(iso).toLocaleDateString(undefined, { month: 'sho
 const todayISO = () => { const d = new Date(); d.setHours(12, 0, 0, 0); return d.toISOString(); };
 function sameDay(a, b) { return a.getFullYear() == b.getFullYear() && a.getMonth() == b.getMonth() && a.getDate() == b.getDate(); }
 
-async function state() {
+async function state(fetchUser = false, fetchCategory = true, fetchTasks = true) {
     let data = getCachdData()
     if (data != null)
         return data;
 
-    data = await fetchState();
+    data = await fetchState(fetchUser, fetchCategory, fetchTasks);
     saveStateIntoCache(data, Date.now())
     return data;
 }
 
+// Re-fetch all the data, even if they exist
 async function fetchNewData() {
     if (IGNORE_REFRESH_FETCH)
         return getCachdData()
@@ -101,11 +102,25 @@ function saveStateIntoCache(data, time) {
     }));
 }
 
+async function cachedRawData_JSON() {
+    let data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    return (data | (await fetchNewData()))
+}
+async function cachedRawData_user() {
+    return (await cachedRawData_JSON())['data'].user;
+}
+async function cachedRawData_category() {
+    return (await cachedRawData_JSON())['data'].categories;
+}
+async function cachedRawData_task() {
+    return (await cachedRawData_JSON())['data'].tasks;
+}
+
 function getCachdData() {
-    let cached = (localStorage.getItem(STORAGE_KEY));
+    let cached = cachedRawData_JSON();
 
     if (cached) {
-        const { data, time } = JSON.parse(cached);
+        const { data, time } = cached;
         const isValid = (Date.now() - time) < STORAGE_DURATION;
 
         if (isValid || IGNORE_REFRESH_FETCH)
@@ -114,10 +129,10 @@ function getCachdData() {
     return null;
 }
 
-async function fetchState() {
-    let currentUser = await getUser();
-    let categories = await getCategories();
-    let tasks = await getTasks();
+async function fetchState(fetchUser = true, fetchCategory = true, fetchTasks = true) {
+    let currentUser = fetchUser ? await getUser() : await cachedRawData_user();
+    let categories = fetchCategory ? await getCategories() : await cachedRawData_category();
+    let tasks = fetchTasks ? await getTasks() : await cachedRawData_task();
 
     let user = { name: currentUser.username, email: currentUser.email };
 
@@ -216,25 +231,25 @@ function toast(msg, type = 'success') {
 const SETTINGS_KEY = 'taskflow:settings:v1';
 const DEFAULT_SETTINGS = {
     // Appearance
-    theme: 'light',
+    theme: 'dark',
     defaultView: 'dashboard',
     dateFormat: 'short',
-    
+
     // Task Defaults
     defaultTaskPriority: 'medium',
     defaultTaskStatus: 'toDo',
     defaultReminderTime: '09:00',
-    
+
     // Notifications
     enableNotifications: true,
     notifyBeforeDue: 24,
-    
+
     // Behavior
     autoSaveNotes: true,
     showCompletedTasks: true,
     enableKeyboardShortcuts: true,
     enableDragDrop: true,
-    
+
     // Future extensibility
     experimental: {}
 };

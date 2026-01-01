@@ -1,16 +1,16 @@
 import {
-    PRIORITY_BADGE, STATUS_LABEL, STATUS_LABEL_Array, PRIORITY_LABEL, GetStatusLabel, $, $$, fmtDate, todayISO, getTextColor
-    , fetchState, getCachdData, saveStateIntoCache, fetchNewData, state
+  PRIORITY_BADGE, STATUS_LABEL, STATUS_LABEL_Array, PRIORITY_LABEL, GetStatusLabel, $, $$, fmtDate, todayISO, getTextColor
+  , fetchState, getCachdData, saveStateIntoCache, fetchNewData, state,
+  
 } from "./sharedData.js";
 import { getTasks, createTask, updateTask, deleteTask, getCategories, createCategories, updateCategories } from "./utills.js";
-import { renderAll } from "./script.js";
-export { settingsSectionTemplate, settingsSelectTemplate, settingsToggleTemplate, render_mono_category, render_mono_calander_day, taskItemTemplate, taskItemTemplate_complete, renderCategories, taskForm, openNewCategory, openEditTask, openNewTask, closeModal, openModal }
+export { deleteConfirmMenu, settingsSectionTemplate, settingsSelectTemplate, settingsToggleTemplate, render_mono_category, render_mono_calander_day, taskItemTemplate, taskItemTemplate_complete, renderCategories, taskForm, openNewCategory, /*openEditTask, openNewTask,*/ closeModal, openModal }
 
 
 async function taskItemTemplate(data, t, taskDone) {
-    const cat = data.categories.find(c => c.id === t.category);
+  const cat = data.categories.find(c => c.id === t.category);
 
-    return `
+  return `
       <li class="py-4 flex gap-4 group hover:bg-gray-50 dark:hover:bg-gray-800/30 -mx-2 px-2 rounded-xl transition-colors">
         <input type="checkbox" ${taskDone(t) ? 'checked' : ''} data-action="toggle-complete" data-id="${t.id}" class="mt-1 w-5 h-5 rounded-lg border-2 border-gray-300 dark:border-gray-600 cursor-pointer accent-blue-600">
         <div class="flex-1 min-w-0">
@@ -62,42 +62,42 @@ async function taskItemTemplate(data, t, taskDone) {
 
 
 async function taskItemTemplate_complete(data, t, taskDone) {
-    const cat = data.categories.find(c => c.id === t.category);
-    const isComplete = taskDone(t);
+  const cat = data.categories.find(c => c.id === t.category);
+  const isComplete = taskDone(t);
 
-    const priorityStyles = {
-        high: 'bg-red-50 text-red-700 ring-1 ring-red-200 dark:bg-red-950/50 dark:text-red-400 dark:ring-red-900/50',
-        medium: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200 dark:bg-amber-950/50 dark:text-amber-400 dark:ring-amber-900/50',
-        low: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:ring-emerald-900/50'
-    };
+  const priorityStyles = {
+    high: 'bg-red-50 text-red-700 ring-1 ring-red-200 dark:bg-red-950/50 dark:text-red-400 dark:ring-red-900/50',
+    medium: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200 dark:bg-amber-950/50 dark:text-amber-400 dark:ring-amber-900/50',
+    low: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:ring-emerald-900/50'
+  };
 
-    const statusConfig = {
-        toDo: {
-            icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+  const statusConfig = {
+    toDo: {
+      icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
             </svg>`,
-            label: 'To Do',
-            color: 'text-gray-600 dark:text-gray-400'
-        },
-        inProgress: {
-            icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      label: 'To Do',
+      color: 'text-gray-600 dark:text-gray-400'
+    },
+    inProgress: {
+      icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>`,
-            label: 'In Progress',
-            color: 'text-blue-600 dark:text-blue-400'
-        },
-        Done: {
-            icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      label: 'In Progress',
+      color: 'text-blue-600 dark:text-blue-400'
+    },
+    Done: {
+      icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>`,
-            label: 'Done',
-            color: 'text-emerald-600 dark:text-emerald-400'
-        }
-    };
+      label: 'Done',
+      color: 'text-emerald-600 dark:text-emerald-400'
+    }
+  };
 
-    const currentStatus = statusConfig[t.status] || statusConfig.toDo;
+  const currentStatus = statusConfig[t.status] || statusConfig.toDo;
 
-    return `
+  return `
     <li class="group relative" role="listitem">
       <article 
         class="relative p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/60 dark:border-gray-800/60 
@@ -277,16 +277,16 @@ async function taskItemTemplate_complete(data, t, taskDone) {
 
 // Category Layout Configuration
 const CATEGORY_LAYOUT_CONFIG = {
-    // Character threshold for determining layout
-    // Categories with names longer than this will take full width
-    // Shorter names will be displayed 2 per row
-    lengthThreshold: 12,
+  // Character threshold for determining layout
+  // Categories with names longer than this will take full width
+  // Shorter names will be displayed 2 per row
+  lengthThreshold: 12,
 
-    // Maximum characters to display before truncation
-    maxDisplayLength: 20,
+  // Maximum characters to display before truncation
+  maxDisplayLength: 20,
 
-    // Truncation suffix
-    truncationSuffix: '...'
+  // Truncation suffix
+  truncationSuffix: '...'
 };
 
 /**
@@ -296,12 +296,12 @@ const CATEGORY_LAYOUT_CONFIG = {
  * @returns {Promise<string>} HTML string for the category card
  */
 async function render_mono_category(c, options = {}) {
-    const data = await state();
-    const title = c.title?.trim() || 'Untitled';
-    const taskCount = data.tasks.filter(t => t.category === c.id).length;
-    const categoryColor = c?.color?.trim() || '#9CA3AF';
+  const data = await state();
+  const title = c.title?.trim() || 'Untitled';
+  const taskCount = data.tasks.filter(t => t.category === c.id).length;
+  const categoryColor = c?.color?.trim() || '#9CA3AF';
 
-    return `
+  return `
     <label class="category-filter-item flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-all group">
       <input type="checkbox" 
              class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-pink-600 focus:ring-2 focus:ring-pink-500 focus:ring-offset-0 transition-all" 
@@ -314,35 +314,60 @@ async function render_mono_category(c, options = {}) {
   `;
 }
 
+/**
+ * @param {boolean} task - is the menu for deleting a task?
+ * @param {string} subjectTitle - title of what we are deleting.
+ * @returns 
+ */
+function deleteConfirmMenu(task = true, subjectTitle) {
+  return `
+            <div class="text-center py-6">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </div>
+                <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Delete Category?</h4>
+                <p class="text-gray-600 dark:text-gray-400 mb-4">Are you sure you want to delete <strong>"${subjectTitle}"</strong>? This action cannot be undone.</p>
+                <div class="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    ${task ? "<span>Tip: You can also drag tasks to different dates to reschedule them</span>" : ""}
+                </div>
+            </div>
+        `
+}
+
 
 // Calendar's everty day's template
 // Calendar's every day's template
 function render_mono_calander_day(day, month, year, isCurrentMonth, isToday, isSelected, taskCount) {
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-    return `
+  return `
     <div 
       class="cal-day group bg-white dark:bg-gray-900 min-h-[100px] p-3 cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-800 hover:shadow-lg ${!isCurrentMonth ? 'opacity-40 hover:opacity-60' : ''
-        } ${isToday ? 'ring-2 ring-blue-500 ring-inset shadow-md' : ''
-        } ${isSelected ? 'bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-400 ring-inset' : ''
-        }"
+    } ${isToday ? 'ring-2 ring-blue-500 ring-inset shadow-md' : ''
+    } ${isSelected ? 'bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-400 ring-inset' : ''
+    }"
       data-date="${dateStr}"
       title="${isCurrentMonth ? 'Double-click to add task, drag tasks here to reschedule' : 'Click to view'}"
     > 
       <div class="flex items-start justify-between mb-2">
         <span class="text-sm font-semibold transition-all ${isToday
-            ? 'w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-sm'
-            : isSelected
-                ? 'text-blue-700 dark:text-blue-300'
-                : 'text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white'
-        }"> 
+      ? 'w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-sm'
+      : isSelected
+        ? 'text-blue-700 dark:text-blue-300'
+        : 'text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white'
+    }"> 
           ${day}
         </span>
         ${taskCount > 0 ? `
           <span class="text-xs font-bold px-2 py-0.5 rounded-full transition-all ${taskCount > 5
-                ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 ring-1 ring-red-200 dark:ring-red-800'
-                : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 ring-1 ring-blue-200 dark:ring-blue-800'
-            }">
+        ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 ring-1 ring-red-200 dark:ring-red-800'
+        : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 ring-1 ring-blue-200 dark:ring-blue-800'
+      }">
             ${taskCount}
           </span>
         ` : ''}
@@ -369,22 +394,22 @@ function render_mono_calander_day(day, month, year, isCurrentMonth, isToday, isS
 }
 
 async function renderCategories() {
-    const data = await state();
-    const wrap = $('#categoryGrid');
+  const data = await state();
+  const wrap = $('#categoryGrid');
 
-    const screenWidth = window.innerWidth;
-    const LST = 15;
-    const MST = 12;
-    const SST = 10;
-    const VSST = 9;
+  const screenWidth = window.innerWidth;
+  const LST = 15;
+  const MST = 12;
+  const SST = 10;
+  const VSST = 9;
 
-    const maxTitleLength = screenWidth > 1200 ? LST : screenWidth > 750 ? MST : screenWidth > 500 ? SST : VSST;
-    wrap.innerHTML = data.categories.map(c => {
-        let title = c.title.trim();
-        if (title.length > maxTitleLength)
-            title = title.slice(0, maxTitleLength) + '...';
+  const maxTitleLength = screenWidth > 1200 ? LST : screenWidth > 750 ? MST : screenWidth > 500 ? SST : VSST;
+  wrap.innerHTML = data.categories.map(c => {
+    let title = c.title.trim();
+    if (title.length > maxTitleLength)
+      title = title.slice(0, maxTitleLength) + '...';
 
-        return `
+    return `
         <button class="group p-4 rounded-xl border border-gray-200 dark:border-gray-800 text-left hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-700 transition-all duration-200 hover:-translate-y-1" data-cat="${c.id}">
           <div class="flex items-center gap-3">
             <span   class="inline-block w-4 h-4 flex-shrink-0 rounded-full ring-2 ring-offset-2 ring-offset-white dark:ring-offset-gray-900 transition-transform duration-200 group-hover:scale-110"
@@ -397,11 +422,11 @@ async function renderCategories() {
 }
 
 async function taskForm(t = {}) {
-    const catOpts = (await state()).categories.map(c => `<option value="${c.id}" ${t.category === c.id ? 'selected' : ''}>${c.title}</option>`).join('');
-    const statusOpts = Object.entries(STATUS_LABEL).map(([label, value]) => `<option ${t.status === label ? 'selected' : ''} value="${label}">${value}</option>`).join('');
-    const priorityOpts = Object.entries(PRIORITY_LABEL).map(([label, value]) => `<option ${t.proirity === label ? 'selected' : ''} value="${label}">${value}</option>`).join('');
+  const catOpts = (await state()).categories.map(c => `<option value="${c.id}" ${t.category === c.id ? 'selected' : ''}>${c.title}</option>`).join('');
+  const statusOpts = Object.entries(STATUS_LABEL).map(([label, value]) => `<option ${t.status === label ? 'selected' : ''} value="${label}">${value}</option>`).join('');
+  const priorityOpts = Object.entries(PRIORITY_LABEL).map(([label, value]) => `<option ${t.proirity === label ? 'selected' : ''} value="${label}">${value}</option>`).join('');
 
-    return `
+  return `
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Title</label>
@@ -431,10 +456,10 @@ async function taskForm(t = {}) {
 }
 
 async function openNewCategory() {
-    const categories = (await state()).categories;
-    openModal({
-        title: 'New Category',
-        bodyHTML: `
+  const categories = (await state()).categories;
+  openModal({
+    title: 'New Category',
+    bodyHTML: `
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="md:col-span-2">
             <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Category Name</label>
@@ -445,120 +470,122 @@ async function openNewCategory() {
             <input id="c-color" type="color" value="#6366f1" class="w-full h-12 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 cursor-pointer"/>
           </div>
         </div>`,
-        async onSubmit() {
-            const name = $('#c-name').value.trim();
-            const color = $('#c-color').value;
-            if (!name) {
-                toast('Name is required', 'error');
-                return false;
-            }
-            createCategories(
-                {
-                    title: name.toLowerCase(),
-                    color: color
-                });
-            await fetchNewData();
-            await renderAll();
-            toast('Category added successfully');
-        }
-    });
+    async onSubmit() {
+      const name = $('#c-name').value.trim();
+      const color = $('#c-color').value;
+      if (!name) {
+        toast('Name is required', 'error');
+        return false;
+      }
+      createCategories(
+        {
+          title: name.toLowerCase(),
+          // some hit must be here for handing the description
+          color: color
+        });
+      await fetchNewData();
+      await renderAll();
+      toast('Category added successfully');
+    }
+  });
 }
 
 async function openModal({ title, bodyHTML, onSubmit }) {
-    const overlay = $('#modalOverlay');
-    overlay.innerHTML = '';
+  const overlay = $('#modalOverlay');
+  overlay.innerHTML = '';
 
-    const tpl = document.importNode($('#modalTemplate').content, true);
-    tpl.querySelector('#modalTitle').textContent = title;
+  const tpl = document.importNode($('#modalTemplate').content, true);
+  tpl.querySelector('#modalTitle').textContent = title;
 
-    const body = tpl.querySelector('#modalBody');
-    body.innerHTML = (await bodyHTML);
+  const body = tpl.querySelector('#modalBody');
+  body.innerHTML = (await bodyHTML);
 
-    const primary = tpl.querySelector('#modalPrimary');
-    primary.onclick = () => {
-        if (onSubmit?.() !== false) closeModal();
-    };
-    tpl.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', closeModal));
-    overlay.appendChild(tpl);
-    overlay.classList.remove('hidden');
-    overlay.setAttribute('aria-hidden', 'false');
-    setTimeout(() => overlay.querySelector('input,textarea,select,button')?.focus(), 0);
+  const primary = tpl.querySelector('#modalPrimary');
+  primary.onclick = () => {
+    if (onSubmit?.() !== false) closeModal();
+  };
+  tpl.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', closeModal));
+  overlay.appendChild(tpl);
+  overlay.classList.remove('hidden');
+  overlay.setAttribute('aria-hidden', 'false');
+  setTimeout(() => overlay.querySelector('input,textarea,select,button')?.focus(), 0);
 }
 
 function closeModal() {
-    const overlay = $('#modalOverlay');
-    overlay.classList.add('hidden');
-    overlay.setAttribute('aria-hidden', 'true');
-    overlay.innerHTML = '';
+  const overlay = $('#modalOverlay');
+  overlay.classList.add('hidden');
+  overlay.setAttribute('aria-hidden', 'true');
+  overlay.innerHTML = '';
 }
 
 async function openNewTask() {
-    const data = await state();
+  const data = await state();
 
-    openModal({
-        title: 'New Task',
-        bodyHTML: taskForm(
-            {
-                status: 'toDo',
-                proirity: 'medium',
-                category: data.categories[0]?.id || '',
-                reminder: new Date().toISOString()
-            }
-        ),
-        async onSubmit() {
-            const t = {
-                title: $('#f-title').value.trim(),
-                description: $('#f-desc').value.trim(),
-                category: $('#f-category').value,
-                reminder: $('#f-due').value ? new Date($('#f-due').value).toISOString() : new Date().toISOString(),
-                status: $('#f-status').value.trim(),
-                proirity: $('#f-priority').value
-            };
-            if (!t.title) {
-                toast('Title is required', 'error');
-                return false;
-            }
-            try {
-                await createTask(t);
-                await fetchNewData();
-                await renderAll();
-                toast('Task created successfully');
-            } catch (e) {
-                console.log(e);
-            }
-        }
-    });
+  openModal({
+    title: 'New Task',
+    bodyHTML: taskForm(
+      {
+        status: 'toDo',
+        proirity: 'medium',
+        category: data.categories[0]?.id || '',
+        reminder: new Date().toISOString()
+      }
+    ),
+    async onSubmit() {
+      const t = {
+        title: $('#f-title').value.trim(),
+        description: $('#f-desc').value.trim(),
+        category: $('#f-category').value,
+        reminder: $('#f-due').value ? new Date($('#f-due').value).toISOString() : new Date().toISOString(),
+        status: $('#f-status').value.trim(),
+        proirity: $('#f-priority').value
+      };
+      if (!t.title) {
+        toast('Title is required', 'error');
+        return false;
+      }
+      try {
+        await createTask(t);
+        re_render
+        // await fetchNewData();
+        // await renderAll();
+        toast('Task created successfully');
+      } catch (e) {
+        console.log(e);
+      }
+    }
+  });
 }
 
 async function openEditTask(id) {
-    const tasks = (await state()).tasks;
-    const t = tasks.find(x => x.id == id);
-    if (!t)
-        return;
-    openModal({
-        title: 'Edit Task',
-        bodyHTML: taskForm(t),
-        async onSubmit() {
-            t.title = $('#f-title').value.trim();
-            t.description = $('#f-desc').value.trim();
-            t.category = $('#f-category').value;
-            if ($('#f-due').value !== "")
-                t.reminder = new Date($('#f-due').value).toISOString();
-            t.status = $('#f-status').value.trim();
-            t.proirity = $('#f-priority').value;
-            await updateTask(t, id);
-            await fetchNewData();
-            await renderAll();
-            toast('Task updated successfully');
-        }
-    });
+  const tasks = (await state()).tasks;
+  const t = tasks.find(x => x.id == id);
+  if (!t)
+    return;
+  openModal({
+    title: 'Edit Task',
+    bodyHTML: taskForm(t),
+    async onSubmit() {
+      t.title = $('#f-title').value.trim();
+      t.description = $('#f-desc').value.trim();
+      t.category = $('#f-category').value;
+      if ($('#f-due').value !== "")
+        t.reminder = new Date($('#f-due').value).toISOString();
+      t.status = $('#f-status').value.trim();
+      t.proirity = $('#f-priority').value;
+      await updateTask(t, id);
+      await fetchNewData();
+      await renderAll();
+      toast('Task updated successfully');
+    }
+  });
 }
 
 /********************
  * Settings UI Components
  ********************/
 function settingsToggleTemplate(id, label, description, checked = false) {
-    return `
+  return `
         <div class="flex items-center justify-between p-4 rounded-xl border border-gray-200/60 dark:border-gray-700/60 hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-all">
             <div class="flex-1 min-w-0">
                 <label for="${id}" class="flex items-center gap-3 cursor-pointer">
@@ -585,11 +612,11 @@ function settingsToggleTemplate(id, label, description, checked = false) {
 }
 
 function settingsSelectTemplate(id, label, options, value) {
-    const optionsHtml = options.map(opt =>
-        `<option value="${opt.value}" ${opt.value === value ? 'selected' : ''}>${opt.label}</option>`
-    ).join('');
+  const optionsHtml = options.map(opt =>
+    `<option value="${opt.value}" ${opt.value === value ? 'selected' : ''}>${opt.label}</option>`
+  ).join('');
 
-    return `
+  return `
         <div class="space-y-2">
             <label for="${id}" class="text-sm font-semibold text-gray-700 dark:text-gray-300">${label}</label>
             <select id="${id}" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 
@@ -603,7 +630,7 @@ function settingsSelectTemplate(id, label, options, value) {
 }
 
 function settingsSectionTemplate(title, content) {
-    return `
+  return `
         <div class="p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-lg">
             <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-blue-500"></span>
