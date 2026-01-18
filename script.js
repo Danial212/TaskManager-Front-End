@@ -9,28 +9,31 @@ import {
 import { logged_in, logout_user, navigate_login } from "./user.js";
 import { initCategoriesPage, onCategoriesRouteActive, updateAllCategoryDropdowns, updateCategoryStats } from "./categoryManager.js";
 import { loadSettings } from "./sharedData.js";
+import { taskPlaceHolder, tasksStatusPlaceHolder } from "./ContentPlaceHolder.js";
 export { fetchUpdate, renderAll, updateCategoryLocaly, deleteCategoryLocaly, createCategoryLocaly }
 
 // Tailwind config
-tailwind.config = {
-    darkMode: 'class',
-    theme: {
-        extend: {
-            colors: {
-                brand: {
-                    50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc', 400: '#818cf8',
-                    500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 800: '#3730a3', 900: '#312e81'
-                }
-            },
-            boxShadow: {
-                soft: '0 10px 25px -10px rgba(0,0,0,0.15)'
-            },
-            borderRadius: {
-                '2xl': '1.25rem'
-            }
-        }
-    }
-}
+// if (tailwind != undefined) {
+//     tailwind.config = {
+//         darkMode: 'class',
+//         theme: {
+//             extend: {
+//                 colors: {
+//                     brand: {
+//                         50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc', 400: '#818cf8',
+//                         500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 800: '#3730a3', 900: '#312e81'
+//                     }
+//                 },
+//                 boxShadow: {
+//                     soft: '0 10px 25px -10px rgba(0,0,0,0.15)'
+//                 },
+//                 borderRadius: {
+//                     '2xl': '1.25rem'
+//                 }
+//             }
+//         }
+//     }
+// }
 
 /********************
  * Drag & Drop State
@@ -68,7 +71,7 @@ async function renderAll() {
 }
 
 async function re_RenderAll() {
-    routeTo(currentRoutePage());
+    await routeTo(currentRoutePage());
     // await renderAll()
 }
 
@@ -165,10 +168,10 @@ function updateWeekIndicator() {
 
 async function renderCalendar() {
     const data = await state();
-    
+
     const year = cal.getFullYear();
     const month = cal.getMonth();
-    
+
     $('#calTitle').textContent = cal.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
     const first = new Date(year, month, 1);
     const last = new Date(year, month + 1, 0);
@@ -693,7 +696,7 @@ function openTaskDetails(taskId) {
 // Function to open new task modal with pre-filled date
 async function openNewTaskForDate(date = new Date()) {
     console.log('we have', date);
-    
+
     const data = await state();
 
     openModal({
@@ -816,14 +819,13 @@ async function deleteTaskLocaly(id) {
 
 async function updateTaskLocaly(id, updatedFields) {
     const currentState = await state();
-    const tasks = [...currentState.tasks]; // clone array to avoid reference issues
-
+    // clone array to avoid reference issues
+    const tasks = [...currentState.tasks];
     const index = tasks.findIndex(t => t.id == id);
-    if (index === -1) return;
-
+    if (index === -1)
+        return;
     const updatedTask = { ...tasks[index], ...updatedFields };
     tasks[index] = updatedTask;
-
     const updatedData = { ...currentState, tasks };
 
     saveStateIntoCache(updatedData, Date.now());
@@ -963,16 +965,12 @@ window.openNewTaskForDate = openNewTaskForDate;
 window.confirmDeleteTask = confirmDeleteTask;
 
 /********************
- * Modals
- ********************/
-// Must be import from 'renderTemplates.js', for clean coding
-
-/********************
  * Drag & Drop (Kanban)
  ********************/
 export async function renderKanbanFull() {
     $$('#route-kanban .kanban-drop').forEach(drop => drop.innerHTML = '');
     const data = await state();
+
     data.tasks.forEach(t => {
         const card = document.createElement('div');
         card.className = 'draggable px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 cursor-move hover:shadow-lg transition-all duration-200';
@@ -994,7 +992,7 @@ export async function renderKanbanFull() {
         const col = $(`#route-kanban .kanban-col[data-status="${STATUS_LABEL[t.status]}"] .kanban-drop`);
         col?.appendChild(card);
     });
-    enableDnD();
+    await enableDnD();
 }
 
 async function enableDnD() {
@@ -1006,31 +1004,40 @@ async function enableDnD() {
         });
         el.addEventListener('dragend', () => el.classList.remove('opacity-50'));
     });
+
     $$('#route-kanban .kanban-drop').forEach(drop => {
+        const dargInEvent = (dropZone) => dropZone.classList.add('ring-2', 'ring-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+        const dargOutEvent = (dropZone) => dropZone.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+
+        // When we move into a card into a zone
         drop.addEventListener('dragover', e => {
             e.preventDefault();
-            drop.classList.add('ring-2', 'ring-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+            dargInEvent(drop);
         });
-        drop.addEventListener('dragleave', () => {
-            drop.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+        // When we move a card out from a zone
+        drop.addEventListener('dragleave', e => {
+            dargOutEvent(drop);
         });
+
+
         drop.addEventListener('drop', async e => {
+            e.stopImmediatePropagation();
             e.preventDefault();
-            drop.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+            dargOutEvent(drop);
+
             const id = Number(e.dataTransfer.getData('text/plain'));
             const col = drop.closest('.kanban-col');
             const st = GetStatusLabel(col.dataset.status);
             const t = data.tasks.find(x => x.id === id);
+
             if (t) {
                 t.status = st.trim();
-                // await updateTask(t, id);
-                // await re_RenderAll()
                 await fetchUpdate(t, id, updateTask, updateTaskLocaly, FetchModes.UPDATE);
 
-                await renderKanbanFull();
                 toast('Task moved to ' + col.dataset.status);
             }
         });
+
     });
 }
 
@@ -1593,7 +1600,7 @@ function currentRoutePage() {
 }
 
 
-function routeTo(name) {
+async function routeTo(name) {
     ['dashboard', 'kanban', 'tasks', 'calendar', 'categories', 'settings'].forEach(r => $('#route-' + r).classList.add('hidden'));
     $('#route-' + name).classList.remove('hidden');
     $$('.nav-link').forEach(a => {
@@ -1605,10 +1612,11 @@ function routeTo(name) {
     switch (name) {
         default:
         case 'route-dashboard':
+        case 'dashboard':
             renderAll();
             break;
         case 'kanban':
-            renderKanbanFull();
+            await renderKanbanFull();
             break;
 
         case 'tasks':
@@ -1633,9 +1641,9 @@ function routeTo(name) {
  * Event Wiring
  ********************/
 async function wire() {
-    $$('.nav-link').forEach(a => a.addEventListener('click', e => {
+    $$('.nav-link').forEach(a => a.addEventListener('click', async e => {
         e.preventDefault();
-        routeTo(a.dataset.nav);
+        await routeTo(a.dataset.nav);
     }));
 
     $('#searchInput')?.addEventListener('input', () => renderTasks());
@@ -1713,7 +1721,7 @@ async function wire() {
     $('#logoutBtn').addEventListener('click', logout);
 
     // Keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
+    document.addEventListener('keydown', async e => {
         if (e.key === '/' && !e.target.matches('input, textarea')) {
             e.preventDefault();
             $('#searchInput')?.focus();
@@ -1726,20 +1734,18 @@ async function wire() {
             toggleTheme();
         }
         if (e.key.toLowerCase() === 'c' && !e.target.matches('input, textarea')) {
-            routeTo('calendar');
+            await routeTo('calendar');
         }
         if (e.key.toLowerCase() === 'k' && !e.target.matches('input, textarea')) {
-            routeTo('kanban');
+            await routeTo('kanban');
         }
         if (e.key.toLowerCase() === 't' && !e.target.matches('input, textarea')) {
-            routeTo('tasks');
+            await routeTo('tasks');
         }
         if (e.key === 'Escape') {
             closeModal();
         }
     });
-
-    $('[data-nav="kanban"]').addEventListener('click', () => routeTo('kanban'));
 }
 
 function nextStatus(s) {
@@ -2014,6 +2020,38 @@ function applyTheme(theme) {
 }
 
 
+//  This function must be completed ...
+function renderContentPlaceHolders() {
+    const ul = $('#taskList');
+
+    let result = taskPlaceHolder()
+    result += result
+    result += result
+    ul.innerHTML = result
+
+
+    let boxHolder = tasksStatusPlaceHolder()
+
+
+    // $('#statToday').textContent = dueToday;
+    // $('#statOverdue').textContent = overdue;
+    // $('#statDone').textContent = done;
+    let box = document.createElement('div')
+    // box. = boxHolder
+    box.style.background = "red";
+
+    box.style.width = "8em";
+    box.style.height = "1em";
+    box.style.display = "inline"
+
+    // box.style.width = "3em";
+    // box.style.height = "4em";
+
+
+    $('#statCategories').style.display = "inline-flex";
+    $('#statCategories').appendChild(box)
+}
+
 
 
 /********************
@@ -2039,9 +2077,11 @@ document.addEventListener('DOMContentLoaded', () => {
             document.documentElement.classList.toggle('dark', e.matches);
         });
     }
+    
+    renderContentPlaceHolders();
 
-    wire();
     renderAll();
     initializeCalendar();
-    routeTo('dashboard');
+    wire();
+
 });

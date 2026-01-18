@@ -5,10 +5,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>TaskFlow — Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+    <link rel="stylesheet" href="TW.css">
+    <!-- <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"> -->
+
     <style>
         * {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -279,7 +282,7 @@
             </header>
 
             <!-- Content Switcher -->
-            <main id="route-dashboard" class="hidden flex-1 overflow-y-auto p-6 space-y-6">
+            <main id="route-dashboard" class="flex-1 overflow-y-auto p-6 space-y-6">
                 <!-- Stats -->
                 <section class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 
@@ -298,6 +301,7 @@
                         </div>
                         <p id="statToday" class="text-4xl font-bold text-gray-900 dark:text-white">0</p>
                     </div>
+
                     <div
                         class="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-sm hover:shadow-xl hover:shadow-red-500/10 dark:hover:shadow-red-500/5 transition-all duration-300 hover:-translate-y-1">
                         <div class="flex items-center justify-between mb-3">
@@ -313,6 +317,7 @@
                         </div>
                         <p id="statOverdue" class="text-4xl font-bold text-gray-900 dark:text-white">0</p>
                     </div>
+
                     <div
                         class="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-sm hover:shadow-xl hover:shadow-green-500/10 dark:hover:shadow-green-500/5 transition-all duration-300 hover:-translate-y-1">
                         <div class="flex items-center justify-between mb-3">
@@ -526,15 +531,9 @@
                 </div>
             </main>
 
-            <!-- Other routes placeholders -->
+
             <!-- All Tasks Panel -->
-
-
-
-
-
-
-            <main id="route-tasks" class="flex-1 overflow-hidden">
+            <main id="route-tasks" class="hidden flex-1 overflow-hidden">
                 <div class="h-full flex">
                     <!-- Tasks Content - Left Side -->
                     <div class="flex-1 overflow-y-auto p-6">

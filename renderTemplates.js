@@ -648,3 +648,4 @@ function settingsSectionTemplate(title, content) {
         </div>
     `;
 }
+
