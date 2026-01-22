@@ -1,12 +1,16 @@
-import { getAuthTokens } from "./auth.js";
+import { getAuthTokens, signup } from "./auth.js";
 
+// Page wide varible
+const loginForm = document.getElementById('loginForm');
+const signUpForm = document.getElementById('signUpForm')
 
 // Theme Toggle
 const themeToggle = document.getElementById('themeToggle');
 const html = document.documentElement;
 
+
 // Check for saved theme preference or default to light mode
-const currentTheme = localStorage.getItem('theme') || 'light';
+const currentTheme = 'dark'; //localStorage.getItem('theme') || 'dark';
 if (currentTheme === 'dark') {
     html.classList.add('dark');
 }
@@ -17,18 +21,45 @@ themeToggle.addEventListener('click', () => {
     localStorage.setItem('theme', theme);
 });
 
-// Password Toggle
-const togglePassword = document.getElementById('togglePassword');
-const passwordInput = document.getElementById('password');
-const eyeOpen = document.getElementById('eyeOpen');
-const eyeClosed = document.getElementById('eyeClosed');
 
-togglePassword.addEventListener('click', () => {
+//  password toogle event handler
+function PT_EventHandler(passwordInput, eyeOpen, eyeClosed) {
     const type = passwordInput.type === 'password' ? 'text' : 'password';
     passwordInput.type = type;
     eyeOpen.classList.toggle('hidden');
     eyeClosed.classList.toggle('hidden');
-});
+}
+
+//  Manages display options for login form
+function loginCardManager() {
+    // Password Toggle
+    const togglePassword = loginForm.querySelector('#togglePassword-login');
+    const passwordInput = loginForm.querySelector('#password-login');
+    const eyeOpen = loginForm.querySelector('#eyeOpen-login');
+    const eyeClosed = loginForm.querySelector('#eyeClosed-login');
+
+    togglePassword.addEventListener('click', () => PT_EventHandler(passwordInput, eyeOpen, eyeClosed));
+}
+
+//  Manages display options for signup form
+function signUpCardManager() {
+    // Password Toggle
+    const togglePassword = signUpForm.querySelector('#togglePassword-signup');
+    const passwordInput = signUpForm.querySelector('#password-signup');
+    const eyeOpen = signUpForm.querySelector('#eyeOpen-signup');
+    const eyeClosed = signUpForm.querySelector('#eyeClosed-signup');
+
+    togglePassword.addEventListener('click', () => PT_EventHandler(passwordInput, eyeOpen, eyeClosed));
+
+
+    // Password Confirm Toggle
+    const togglePasswordConfirm = signUpForm.querySelector('#togglePassword-signup-confirm');
+    const passwordInputConfirm = signUpForm.querySelector('#password-signup-confirm');
+    const eyeOpenConfirm = signUpForm.querySelector('#eyeOpen-signup-confirm');
+    const eyeClosedConfirm = signUpForm.querySelector('#eyeClosed-signup-confirm');
+
+    togglePasswordConfirm.addEventListener('click', () => PT_EventHandler(passwordInputConfirm, eyeOpenConfirm, eyeClosedConfirm));
+}
 
 // Toast Notification Function
 function showToast(message, type = 'success') {
@@ -66,13 +97,12 @@ function showToast(message, type = 'success') {
 }
 
 // Form Submission
-const loginForm = document.getElementById('loginForm');
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const userName = document.getElementById('userName').value;
-    const password = document.getElementById('password').value;
-    const remember = document.getElementById('remember').checked;
+    const userName = loginForm.querySelector('#userName-login').value;
+    const password = loginForm.querySelector('#password-login').value;
+    // const remember = loginForm.querySelector('#remember-login').checked;
 
     // Basic validation
     if (!userName || !password) {
@@ -99,19 +129,13 @@ loginForm.addEventListener('submit', async (e) => {
             `;
 
     try {
-        // TODO: Replace with your actual login API call
         await getAuthTokens(userName, password);
 
-        // Simulate delay
-        // await new Promise(resolve => setTimeout(resolve, 1500));
-
-        // For demonstration purposes
         console.log('Login attempt:', { userName, password, remember });
 
-        // Simulate successful login
         showToast('Login successful! Redirecting...', 'success');
 
-        // Redirect after success (replace with your actual redirect)
+        // Redirect after success
         setTimeout(() => {
             window.location.href = '/index.html';
             console.log('Redirecting to dashboard...');
@@ -131,19 +155,78 @@ loginForm.addEventListener('submit', async (e) => {
 const inputs = document.querySelectorAll('input[type="text"], input[type="password"]');
 inputs.forEach(input => {
     input.addEventListener('focus', () => {
-        
+
     });
     input.addEventListener('blur', () => {
-        
+
     });
 });
 
 // Social login buttons (placeholder functions)
-const socialButtons = document.querySelectorAll('button[type="button"]');
-socialButtons.forEach((button, index) => {
-    console.log('button', button);
-    button.addEventListener('click', () => {
-        const provider = index === 0 ? 'Google' : 'GitHub';
-        showToast(`${provider} login coming soon!`, 'info');
-    });
-});
+// const socialButtons = document.getElementsByClassName('e-auth-button');
+
+
+const login_form = document.getElementById('login-form')
+const signup_form = document.getElementById('signup-form')
+
+const sign_up_switch = document.getElementById('sign-up-switch');
+const sign_in_switch = document.getElementById('sign-in-switch');
+
+sign_up_switch.addEventListener('click', () => {
+    login_form.classList.add('hidden');
+    signup_form.classList.remove('hidden');
+})
+
+sign_in_switch.addEventListener('click', () => {
+    login_form.classList.remove('hidden');
+    signup_form.classList.add('hidden');
+})
+
+const submitBtn = signUpForm.querySelector('button[type="submit"]');
+
+
+// Signup event (saving user info into database + save locally into cookie)
+signUpForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const userName = signUpForm.querySelector('#userName-signup').value;
+    const email = signUpForm.querySelector('#email').value;
+    const password = signUpForm.querySelector('#password-signup').value;
+    const password_confirm = signUpForm.querySelector('#password-signup-confirm').value;
+
+
+    if (password !== password_confirm) {
+        showToast("Paswords must match", 'error')
+        return;
+    }
+
+
+    try {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `
+                <svg class="animate-spin h-5 w-5 mx-auto" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            `;
+
+
+        await signup(userName, password, email);
+        // await getAuthTokens(userName, password);
+
+        showToast('Login successful! Redirecting...');
+
+        window.location.href = '/index.html';
+
+    } catch (err) {
+        if (err.message == '500' || err.message == '400')
+            showToast("A user with same info already exists.", 'error')
+        else
+            console.error(err);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `Sign Up`;
+    }
+})
+
+loginCardManager();
+signUpCardManager();
