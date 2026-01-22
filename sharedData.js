@@ -1,11 +1,11 @@
 import { getUser } from "./user.js";
 import { getTasks, createTask, updateTask, deleteTask, getCategories, createCategories, updateCategories } from "./utills.js";
 export {
-    DomainURL, REFRESH_TOKEN, ACCESS_TOKEN, PRIORITY_BADGE, STATUS_LABEL, STATUS_LABEL_Array, PRIORITY_LABEL,
+    NULL_CATEGORY_TITLE, DomainURL, REFRESH_TOKEN, ACCESS_TOKEN, PRIORITY_BADGE, STATUS_LABEL, STATUS_LABEL_Array, PRIORITY_LABEL,
     GetStatusLabel, $, $$, fmtDate, sameDay, todayISO, getTextColor, getLuminance, taskDone, hexToRgb,
     fetchState, getCachdData, saveStateIntoCache, fetchNewData, state, setCookies, getCookies, removeCookies,
     getDayName, getMonthYear, getDaysInMonth, getFirstDayOfMonth,
-    toast, loadSettings
+    toast, loadSettings, value_label_pair
 }
 
 
@@ -14,6 +14,7 @@ const DomainURL = 'http://127.0.0.1:8000/'
 const REFRESH_TOKEN = 'refresh_token'
 const ACCESS_TOKEN = 'access_token'
 const IGNORE_REFRESH_FETCH = false
+const NULL_CATEGORY_TITLE = "null-category"
 
 
 const PRIORITY_BADGE = {
@@ -25,6 +26,17 @@ const PRIORITY_BADGE = {
 const STATUS_LABEL = { W: 'toDo', P: 'inProgress', C: 'Done' };
 const STATUS_LABEL_Array = ['W', 'P', 'C'];
 const PRIORITY_LABEL = { H: 'High', M: 'Medium', L: 'Low' };
+
+function value_label_pair(dict) {
+    let dictionary = []
+    let index = 0
+    for (const value in dict) {
+        dictionary[index++] = { value: value, label: dict[value] }
+    };
+
+    console.log(dictionary);
+    return dictionary
+}
 
 function GetStatusLabel(status) {
     for (const label in STATUS_LABEL)
@@ -254,8 +266,8 @@ const DEFAULT_SETTINGS = {
     dateFormat: 'short',
 
     // Task Defaults
-    defaultTaskPriority: 'medium',
-    defaultTaskStatus: 'toDo',
+    defaultTaskPriority: 'M',
+    defaultTaskStatus: 'W',
     defaultReminderTime: '09:00',
 
     // Notifications
@@ -281,7 +293,7 @@ function loadSettings() {
     }
 }
 
-function saveSettings(settings) {
+export function saveSettings(settings) {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     toast('Settings saved successfully');
 }

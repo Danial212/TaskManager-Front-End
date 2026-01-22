@@ -1,3 +1,4 @@
+import { NULL_CATEGORY_TITLE, state } from "./sharedData.js";
 import { authenticatedFetch } from "./user.js";
 export { getTasks, createTask, updateTask, deleteTask, getCategories, createCategories, updateCategories, deleteCategoryAPI };
 
@@ -15,6 +16,10 @@ async function createTask(task) {
     const header = {
         'Content-Type': 'application/json',
     }
+//  modifying task with null category
+    if (task.category == NULL_CATEGORY_TITLE)
+        task.category = null
+
     const response = await authenticatedFetch(tasksURL,
         {
             method: 'POST',
@@ -32,6 +37,13 @@ async function updateTask(id, task) {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
     };
+
+
+    if (task.category == NULL_CATEGORY_TITLE)
+        task.category = null
+
+    console.log('update:', task);
+
 
     const response = await authenticatedFetch(tasksURL, {
         method: 'PATCH',
@@ -98,6 +110,6 @@ async function deleteCategoryAPI(id) {
     const response = await authenticatedFetch(categoryURL, {
         method: 'DELETE',
     });
-    
+
     return response;
 }

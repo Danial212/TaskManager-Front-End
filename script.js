@@ -4,13 +4,16 @@ import {
     PRIORITY_BADGE, STATUS_LABEL, STATUS_LABEL_Array, PRIORITY_LABEL, GetStatusLabel, $, $$, fmtDate, sameDay
     , todayISO, getTextColor, taskDone, hexToRgb, getLuminance
     , fetchState, getCachdData, saveStateIntoCache, fetchNewData, state,
-    toast
+    toast,
+    NULL_CATEGORY_TITLE,
+    saveSettings,
+    value_label_pair
 } from "./sharedData.js";
 import { logged_in, logout_user, navigate_login } from "./user.js";
 import { initCategoriesPage, onCategoriesRouteActive, updateAllCategoryDropdowns, updateCategoryStats } from "./categoryManager.js";
 import { loadSettings } from "./sharedData.js";
 import { taskPlaceHolder, tasksStatusPlaceHolder } from "./ContentPlaceHolder.js";
-export { fetchUpdate, renderAll, updateCategoryLocaly, deleteCategoryLocaly, createCategoryLocaly }
+export { re_RenderAll, fetchUpdate, renderAll, updateCategoryLocaly, deleteCategoryLocaly, createCategoryLocaly }
 
 // Tailwind config
 // if (tailwind != undefined) {
@@ -90,6 +93,13 @@ async function renderStats() {
     $('#statCategories').textContent = data.categories.length;
 }
 
+
+let currentStatusFilterBtn = $(`#filterAll`);
+const borderGlowClass = 'border-yellow-300'
+const borderGlowClass_dark = 'dark:border-yellow-600'
+/**
+ * @param filter Tasks status label (toDo, inProgress, .etc)
+ */
 async function renderTasks(filter = null) {
     const ul = $('#taskList');
     const data = await state();
@@ -98,8 +108,25 @@ async function renderTasks(filter = null) {
     const q = $('#searchInput')?.value?.trim().toLowerCase();
     if (q)
         items = items.filter(t => [t.title, t.description, t.tags?.join(' ')].join(' ').toLowerCase().includes(q));
-    if (filter && filter !== 'all')
-        items = items.filter(t => STATUS_LABEL[t.status] == filter);
+
+    if (filter) {
+        if (currentStatusFilterBtn) {
+            currentStatusFilterBtn.classList.remove(borderGlowClass);
+            currentStatusFilterBtn.classList.remove(borderGlowClass_dark);
+        }
+
+        if (filter !== 'all') {
+            items = items.filter(t => STATUS_LABEL[t.status] == filter);
+            currentStatusFilterBtn = $(`[data-filter="${filter}"]`);
+        }
+        else {
+            currentStatusFilterBtn = $(`#filterAll`);
+        }
+
+        currentStatusFilterBtn.classList.add(borderGlowClass)
+        currentStatusFilterBtn.classList.add(borderGlowClass_dark);
+    }
+
     const sort = $('#sortSelect').value;
     items.sort((a, b) => {
         if (sort === 'due_asc') return (new Date(a.reminder) - new Date(b.reminder));
@@ -688,22 +715,15 @@ async function initializeCalendar() {
     }
 }
 
-// Function to open task details modal
-function openTaskDetails(taskId) {
-    openEditTask(taskId);
-}
-
 // Function to open new task modal with pre-filled date
 async function openNewTaskForDate(date = new Date()) {
-    console.log('we have', date);
-
     const data = await state();
 
     openModal({
         title: `New Task - ${fmtDate(date.toISOString())}`,
         bodyHTML: taskForm({
-            status: 'toDo',
-            proirity: 'medium',
+            status: currentSettings.defaultTaskStatus,
+            proirity: currentSettings.defaultTaskPriority,
             category: data.categories[0]?.id || '',
             reminder: date.toISOString()
         }),
@@ -721,8 +741,6 @@ async function openNewTaskForDate(date = new Date()) {
                 return false;
             }
             try {
-                // await createTask(t)
-                // await re_RenderAll()
                 await fetchUpdate(t, null, createTask, createTaskLocaly, FetchModes.CREATE);
                 toast('Task created successfully');
             } catch (e) {
@@ -749,8 +767,6 @@ async function openEditTask(id) {
                 t.reminder = new Date($('#f-due').value).toISOString();
             t.status = $('#f-status').value.trim();
             t.proirity = $('#f-priority').value;
-            // const r = await updateTask(t, id);
-            // await re_RenderAll();
 
             await fetchUpdate(t, id, updateTask, updateTaskLocaly, FetchModes.UPDATE)
 
@@ -1581,7 +1597,8 @@ async function getTaskCountForDate(year, month, day) {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     return data.tasks.filter(task => {
         const taskDate = new Date(task.reminder);
-        return taskDate.toISOString().startsWith(dateStr);
+        
+        return (taskDate.toISOString().startsWith(dateStr)) | false;
     }).length;
 }
 
@@ -1792,7 +1809,6 @@ async function taskStatusUpdate(id, data, status) {
 }
 
 
-
 /********************
  * Settings Panel
  ********************/
@@ -1844,15 +1860,12 @@ async function renderSettings() {
 
                 <!-- Task Defaults Section -->
                 ${settingsSectionTemplate('Task Defaults', `
-                    ${settingsSelectTemplate('defaultTaskPriority', 'Default Priority', [
-        { value: 'high', label: 'High' },
-        { value: 'medium', label: 'Medium' },
-        { value: 'low', label: 'Low' }
-    ], currentSettings.defaultTaskPriority)}
-                    ${settingsSelectTemplate('defaultTaskStatus', 'Default Status', [
-        { value: 'toDo', label: 'To Do' },
-        { value: 'inProgress', label: 'In Progress' }
-    ], currentSettings.defaultTaskStatus)}
+                    ${settingsSelectTemplate('defaultTaskPriority', 'Default Priority',
+        value_label_pair(PRIORITY_LABEL)
+        , currentSettings.defaultTaskPriority)}
+                    ${settingsSelectTemplate('defaultTaskStatus', 'Default Status',
+            value_label_pair(STATUS_LABEL)
+            , currentSettings.defaultTaskStatus)}
                     <div class="space-y-2">
                         <label for="defaultReminderTime" class="text-sm font-semibold text-gray-700 dark:text-gray-300">
                             Default Reminder Time
@@ -1983,6 +1996,8 @@ function wireSettingsEvents() {
 }
 
 function applySettingImmediately(key, value) {
+    console.log('Some shit has changed');
+
     switch (key) {
         case 'theme':
             applyTheme(value);

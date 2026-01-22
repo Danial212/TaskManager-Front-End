@@ -1,6 +1,8 @@
+import { re_RenderAll } from "./script.js";
 import {
   PRIORITY_BADGE, STATUS_LABEL, STATUS_LABEL_Array, PRIORITY_LABEL, GetStatusLabel, $, $$, fmtDate, todayISO, getTextColor
   , fetchState, getCachdData, saveStateIntoCache, fetchNewData, state,
+  NULL_CATEGORY_TITLE,
 
 } from "./sharedData.js";
 import { getTasks, createTask, updateTask, deleteTask, getCategories, createCategories, updateCategories } from "./utills.js";
@@ -335,7 +337,7 @@ function deleteConfirmMenu(task = true, subjectTitle) {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                     </svg>
                 </div>
-                <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Delete ${task? 'Task': 'Category'}?</h4>
+                <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Delete ${task ? 'Task' : 'Category'}?</h4>
                 <p class="text-gray-600 dark:text-gray-400 mb-4">Are you sure you want to delete <strong>"${subjectTitle}"</strong>? This action cannot be undone.</p>
                 <div class="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -430,7 +432,10 @@ async function renderCategories() {
 }
 
 async function taskForm(t = {}) {
-  const catOpts = (await state()).categories.map(c => `<option value="${c.id}" ${t.category === c.id ? 'selected' : ''}>${c.title}</option>`).join('');
+  console.log('task form with status:', t.status);
+  
+  let catOpts = (await state()).categories.map(c => `<option value="${c.id}" ${t.category === c.id ? 'selected' : ''}>${c.title}</option>`).join('');
+  catOpts = `<option value="${NULL_CATEGORY_TITLE}" ${t.category ? '' : 'selected'}>No Category</option>` + catOpts
   const statusOpts = Object.entries(STATUS_LABEL).map(([label, value]) => `<option ${t.status === label ? 'selected' : ''} value="${label}">${value}</option>`).join('');
   const priorityOpts = Object.entries(PRIORITY_LABEL).map(([label, value]) => `<option ${t.proirity === label ? 'selected' : ''} value="${label}">${value}</option>`).join('');
 
@@ -492,8 +497,7 @@ async function openNewCategory() {
           color: color
         });
       await fetchNewData();
-      await renderAll();
-      toast('Category added successfully');
+      await re_RenderAll();
     }
   });
 }
