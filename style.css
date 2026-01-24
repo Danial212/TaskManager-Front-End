@@ -42,3 +42,55 @@
     border-radius: .375rem;
     white-space: nowrap;
 }
+
+
+.cph-wrap {
+    position: relative;
+    display: inline-block;
+    border-radius: 1em;
+}
+
+/* The shimmer mask */
+.cph-wrap>.cph-mask {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(110deg,
+            rgba(255, 255, 255, 0.08) 25%,
+            rgba(255, 255, 255, 0.18) 37%,
+            rgba(255, 255, 255, 0.08) 63%);
+    background-size: 200% 100%;
+    animation: cph-shimmer 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    z-index: 10;
+    pointer-events: none;
+    backdrop-filter: blur(2px);
+}
+
+/* Light mode base layer */
+.cph-wrap {
+    background-color: #f1f5f9;
+}
+
+/* Dark mode base layer */
+.dark .cph-wrap {
+    background-color: #2c2c2c32;
+}
+
+/* Dark mode shimmer tuning */
+.dark .cph-wrap>.cph-mask {
+    background: linear-gradient(110deg,
+            rgba(255, 255, 255, 0.04) 25%,
+            rgba(255, 255, 255, 0.10) 37%,
+            rgba(255, 255, 255, 0.04) 63%);
+}
+
+/* Motion */
+@keyframes cph-shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}

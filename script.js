@@ -12,7 +12,7 @@ import {
 import { logged_in, logout_user, navigate_login } from "./user.js";
 import { initCategoriesPage, onCategoriesRouteActive, updateAllCategoryDropdowns, updateCategoryStats } from "./categoryManager.js";
 import { loadSettings } from "./sharedData.js";
-import { taskPlaceHolder, tasksStatusPlaceHolder } from "./ContentPlaceHolder.js";
+import { createFilterPlaceholder, createSidebarPlaceholder, createStatPlaceholder, createTaskPlaceholder } from "./ContentPlaceHolder.js";
 export { re_RenderAll, fetchUpdate, renderAll, updateCategoryLocaly, deleteCategoryLocaly, createCategoryLocaly }
 
 // Tailwind config
@@ -423,7 +423,7 @@ async function renderWeekCalendar(date) {
     weekViewContainer.innerHTML = html;
 
     // Add click event listeners to task cards
-    document.querySelectorAll('.week-task-card').forEach(card => {
+    document.querySelectorAll('.week-task-card').forEach(async (card) => {
         // Click to edit
         card.addEventListener('click', function () {
             const taskId = this.getAttribute('data-task-id');
@@ -441,9 +441,9 @@ async function renderWeekCalendar(date) {
 
         // Drag start
         card.setAttribute('draggable', true);
-        card.addEventListener('dragstart', (e) => {
+        card.addEventListener('dragstart', async (e) => {
             const taskId = card.getAttribute('data-task-id');
-            const data = state();
+            const data = await state();
             draggedTask = data.tasks.find(t => t.id == taskId);
             card.classList.add('opacity-50', 'scale-95');
         });
@@ -910,7 +910,7 @@ async function fetchUpdate(object = null, id = -1, serverFunction, clientFunctio
             break;
     }
 
-    re_RenderAll();
+    await re_RenderAll();
 }
 
 
@@ -1597,7 +1597,7 @@ async function getTaskCountForDate(year, month, day) {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     return data.tasks.filter(task => {
         const taskDate = new Date(task.reminder);
-        
+
         return (taskDate.toISOString().startsWith(dateStr)) | false;
     }).length;
 }
@@ -2036,43 +2036,158 @@ function applyTheme(theme) {
 
 
 //  This function must be completed ...
-function renderContentPlaceHolders() {
-    const ul = $('#taskList');
-
-    let result = taskPlaceHolder()
-    result += result
-    result += result
-    ul.innerHTML = result
-
-
-    let boxHolder = tasksStatusPlaceHolder()
-
-
-    // $('#statToday').textContent = dueToday;
-    // $('#statOverdue').textContent = overdue;
-    // $('#statDone').textContent = done;
-    let box = document.createElement('div')
-    // box. = boxHolder
-    box.style.background = "red";
-
-    box.style.width = "8em";
-    box.style.height = "1em";
-    box.style.display = "inline"
-
-    // box.style.width = "3em";
-    // box.style.height = "4em";
-
-
-    $('#statCategories').style.display = "inline-flex";
-    $('#statCategories').appendChild(box)
+function loadContentPlaceHolders() {
+    setTasksLoading("#taskList")
+    setFilterLoading("#filterBar")
+    setStatsLoading("#statsRow");
+    setSidebarLoading("#sidebar")
 }
+
+function clearContentPlaceHolder() {
+    clearTasksLoading("#taskList")
+    clearFilterLoading("#filterBar")
+    clearStatsLoading("#statsRow")
+    clearSidebarLoading("#sidebar")
+}
+
+function setTasksLoading(ulSelector, count = 5) {
+    const ul = document.querySelector(ulSelector);
+    if (!ul) return;
+
+    let html = "";
+    for (let i = 0; i < count; i++) {
+        html += createTaskPlaceholder();
+    }
+
+    ul.dataset.original = ul.innerHTML;
+    ul.innerHTML = html;
+}
+function clearTasksLoading(ulSelector) {
+    const ul = document.querySelector(ulSelector);
+    if (!ul) return;
+
+    if (ul.dataset.original !== undefined) {
+        ul.innerHTML = ul.dataset.original;
+        delete ul.dataset.original;
+    }
+}
+
+function setFilterLoading(containerSelector) {
+    const container = document.querySelector(containerSelector);
+    if (!container) return;
+
+    container.dataset.original = container.innerHTML;
+    container.innerHTML = createFilterPlaceholder();
+}
+function clearFilterLoading(containerSelector) {
+    const container = document.querySelector(containerSelector);
+    if (!container) return;
+
+    if (container.dataset.original !== undefined) {
+        container.innerHTML = container.dataset.original;
+        delete container.dataset.original;
+    }
+}
+
+function setStatsLoading(containerSelector) {
+    const container = document.querySelector(containerSelector);
+
+    if (!container) {
+        return;
+    }
+    console.log('We have container', container);
+
+
+    const boxes = container.querySelectorAll(".stat-box");
+    console.log('we have these boxes:', boxes);
+
+
+    boxes.forEach(box => {
+
+        box.dataset.original = box.innerHTML;
+        console.log('here we are at' + box);
+
+        box.innerHTML = createStatPlaceholder();
+
+        // if (box.dataset.original) {
+        //     box.innerHTML = box.dataset.original;
+        //     delete box.dataset.original;
+        // }
+
+    });
+}
+function clearStatsLoading(containerSelector) {
+    const container = document.querySelector(containerSelector);
+
+    if (!container)
+        return;
+
+    const boxes = container.querySelectorAll(".stat-box");
+
+    boxes.forEach(box => {
+        if (box.dataset.original) {
+            box.innerHTML = box.dataset.original;
+            delete box.dataset.original;
+        }
+    });
+}
+
+function setSidebarLoading(selector) {
+    const sidebar = document.querySelector(selector);
+    if (!sidebar) return;
+
+    if (!sidebar.dataset.original)
+        sidebar.dataset.original = sidebar.innerHTML;
+
+    sidebar.innerHTML = createSidebarPlaceholder();
+}
+function clearSidebarLoading(selector) {
+    const sidebar = document.querySelector(selector);
+    if (!sidebar) return;
+
+    if (sidebar.dataset.original) {
+        sidebar.innerHTML = sidebar.dataset.original;
+        delete sidebar.dataset.original;
+    }
+}
+
+
+
+
+const CPH = {
+    show(el) {
+        if (!el || el.classList.contains("cph-wrap")) return;
+
+        const wrapper = document.createElement("span");
+        wrapper.className = "cph-wrap";
+        wrapper.style.display = getComputedStyle(el).display === "block" ? "block" : "inline-block";
+
+        el.parentNode.insertBefore(wrapper, el);
+        wrapper.appendChild(el);
+
+        const mask = document.createElement("span");
+        mask.className = "cph-mask";
+        wrapper.appendChild(mask);
+
+        el.style.visibility = "hidden";
+    },
+
+    hide(el) {
+        const wrapper = el.parentNode;
+        if (!wrapper || !wrapper.classList.contains("cph-wrap")) return;
+
+        el.style.visibility = "";
+        wrapper.replaceWith(el);
+    }
+};
+
 
 
 
 /********************
  * Bootstrap
  ********************/
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     if (!logged_in()) {
         navigate_login();
         return;
@@ -2092,11 +2207,13 @@ document.addEventListener('DOMContentLoaded', () => {
             document.documentElement.classList.toggle('dark', e.matches);
         });
     }
-    
-    renderContentPlaceHolders();
 
-    renderAll();
-    initializeCalendar();
-    wire();
+    loadContentPlaceHolders();
+    const data = await state();
+    clearContentPlaceHolder();
+
+    await renderAll();
+    await initializeCalendar();
+    await wire();
 
 });

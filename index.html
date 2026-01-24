@@ -8,6 +8,7 @@
 
     <!-- <script src="https://cdn.tailwindcss.com"></script> -->
     <link rel="stylesheet" href="TW.css">
+    <link rel="stylesheet" href="style.css">
     <!-- <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"> -->
@@ -117,8 +118,7 @@
     <!-- App Container -->
     <div class="flex h-screen">
         <!-- Sidebar -->
-        <aside id="sidebar"
-            class="hidden lg:flex lg:flex-col w-60 shrink-0 border-r border-gray-200/50 dark:border-gray-800/50 bg-white/80 dark:bg-gray-900/80 backdrop">
+        <aside id="sidebar" class="hidden lg:flex lg:flex-col w-60 shrink-0 border-r border-gray-200/50 dark:border-gray-800/50 bg-white/80 dark:bg-gray-900/80 backdrop">
             <div class="flex items-center gap-3 px-6 h-20 border-b border-gray-200/50 dark:border-gray-800/50">
                 <button id="closeSidebar"
                     class="lg:hidden p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -284,74 +284,85 @@
             <!-- Content Switcher -->
             <main id="route-dashboard" class="flex-1 overflow-y-auto p-6 space-y-6">
                 <!-- Stats -->
-                <section class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <section id="statsRow" class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 
-                    <div
-                        class="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-sm hover:shadow-xl hover:shadow-blue-500/10 dark:hover:shadow-blue-500/5 transition-all duration-300 hover:-translate-y-1">
-                        <div class="flex items-center justify-between mb-3">
-                            <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">Due Today</p>
-                            <div
-                                class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 grid place-items-center group-hover:scale-110 transition-transform">
-                                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                    <div class="stat-box">
+                        <div
+                            class="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-sm hover:shadow-xl hover:shadow-blue-500/10 dark:hover:shadow-blue-500/5 transition-all duration-300 hover:-translate-y-1">
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">Due Today</p>
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 grid place-items-center group-hover:scale-110 transition-transform">
+                                    <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
                             </div>
+                            <p id="statToday" class="text-4xl font-bold text-gray-900 dark:text-white">0</p>
                         </div>
-                        <p id="statToday" class="text-4xl font-bold text-gray-900 dark:text-white">0</p>
                     </div>
 
-                    <div
-                        class="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-sm hover:shadow-xl hover:shadow-red-500/10 dark:hover:shadow-red-500/5 transition-all duration-300 hover:-translate-y-1">
-                        <div class="flex items-center justify-between mb-3">
-                            <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">Overdue</p>
-                            <div
-                                class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 grid place-items-center group-hover:scale-110 transition-transform">
-                                <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
+                    <div class="stat-box">
+
+                        <div
+                            class="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-sm hover:shadow-xl hover:shadow-red-500/10 dark:hover:shadow-red-500/5 transition-all duration-300 hover:-translate-y-1">
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">Overdue</p>
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 grid place-items-center group-hover:scale-110 transition-transform">
+                                    <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
                             </div>
+                            <p id="statOverdue" class="text-4xl font-bold text-gray-900 dark:text-white">0</p>
                         </div>
-                        <p id="statOverdue" class="text-4xl font-bold text-gray-900 dark:text-white">0</p>
                     </div>
 
-                    <div
-                        class="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-sm hover:shadow-xl hover:shadow-green-500/10 dark:hover:shadow-green-500/5 transition-all duration-300 hover:-translate-y-1">
-                        <div class="flex items-center justify-between mb-3">
-                            <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">Completed</p>
-                            <div
-                                class="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-900/20 grid place-items-center group-hover:scale-110 transition-transform">
-                                <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none"
-                                    stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                    <div class="stat-box">
+
+                        <div
+                            class="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-sm hover:shadow-xl hover:shadow-green-500/10 dark:hover:shadow-green-500/5 transition-all duration-300 hover:-translate-y-1">
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">Completed</p>
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-900/20 grid place-items-center group-hover:scale-110 transition-transform">
+                                    <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
                             </div>
+                            <p id="statDone" class="text-4xl font-bold text-gray-900 dark:text-white">0</p>
                         </div>
-                        <p id="statDone" class="text-4xl font-bold text-gray-900 dark:text-white">0</p>
                     </div>
-                    <div
-                        class="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-sm hover:shadow-xl hover:shadow-purple-500/10 dark:hover:shadow-purple-500/5 transition-all duration-300 hover:-translate-y-1">
-                        <div class="flex items-center justify-between mb-3">
-                            <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">Categories</p>
-                            <div
-                                class="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-900/20 grid place-items-center group-hover:scale-110 transition-transform">
-                                <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none"
-                                    stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                                </svg>
+                    <div class="stat-box">
+
+                        <div
+                            class="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200/50 dark:border-gray-800/50 shadow-sm hover:shadow-xl hover:shadow-purple-500/10 dark:hover:shadow-purple-500/5 transition-all duration-300 hover:-translate-y-1">
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">Categories</p>
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-900/20 grid place-items-center group-hover:scale-110 transition-transform">
+                                    <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                    </svg>
+                                </div>
                             </div>
+                            <p id="statCategories" class="text-4xl font-bold text-gray-900 dark:text-white">0</p>
                         </div>
-                        <p id="statCategories" class="text-4xl font-bold text-gray-900 dark:text-white">0</p>
                     </div>
                 </section>
 
                 <!-- Quick Actions & Filters -->
-                <section class="flex flex-wrap items-center gap-3">
+                <section id="filterBar" class="flex flex-wrap items-center gap-3">
                     <button
                         class="px-5 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium transition-all shadow-sm hover:shadow-md border-yellow-300 dark:border-yellow-600"
                         id="filterAll">All Tasks</button>

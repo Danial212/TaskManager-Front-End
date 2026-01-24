@@ -48,7 +48,7 @@ function GetStatusLabel(status) {
  * Data Layer
  ********************/
 const STORAGE_KEY = 'taskflow:v1';
-const STORAGE_DURATION = 5 * 60 * 1000; //  5 mintues
+const STORAGE_DURATION = 10 * 1000; //  Cached expiration time in mili secound
 
 // Complete cookie functions
 function setCookies(name, value, days = 7) {
@@ -77,7 +77,7 @@ function removeCookies() {
 }
 
 
-// #region Local Storage
+// #region Local Storage Managment
 
 function saveStateIntoCache(data, time) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -99,13 +99,15 @@ async function cachedRawData_task() {
     return (await cachedRawData_JSON()).data.tasks;
 }
 
-//  Check if valid chach exist
+//  Check if valid cache exist
 async function getCachdData() {
     let cached = await cachedRawData_JSON();
 
     if (cached) {
         const { data, time } = cached;
         const isValid = (Date.now() - time) < STORAGE_DURATION;
+        console.log('last update: ' + ((Date.now() - time)/1000) + ' secounds ago');
+        
 
         if (isValid || IGNORE_REFRESH_FETCH)
             return data;
@@ -164,12 +166,12 @@ function getLuminance(r, g, b) {
 
 // #region Fetch & API Interfaces
 
-async function state(fetchUser = false, fetchCategory = false, fetchTasks = false) {
+async function state() {
     let data = await getCachdData()
     if (data != null)
         return data;
-
-    data = await fetchState(fetchUser, fetchCategory, fetchTasks);
+    
+    data = await fetchNewData()
     saveStateIntoCache(data, Date.now())
     return data;
 }
@@ -178,18 +180,16 @@ async function state(fetchUser = false, fetchCategory = false, fetchTasks = fals
 async function fetchNewData() {
     if (IGNORE_REFRESH_FETCH)
         return getCachdData()
-    const data = await fetchState(true, true, true);
+    const data = await fetchState();
     saveStateIntoCache(data, Date.now())
     return data;
 }
 
 let time = 0
-async function fetchState(fetchUser = true, fetchCategory = true, fetchTasks = true) {
-    console.log(time++, fetchUser, fetchCategory, fetchTasks);
-
-    let currentUser = fetchUser ? await getUser() : await cachedRawData_user();
-    let categories = fetchCategory ? await getCategories() : await cachedRawData_category();
-    let tasks = fetchTasks ? await getTasks() : await cachedRawData_task();
+async function fetchState() {
+    let currentUser = await getUser(); // : await cachedRawData_user();
+    let categories = await getCategories(); // : await cachedRawData_category();
+    let tasks = await getTasks(); // : await cachedRawData_task();
 
     let user = { name: currentUser.username, email: currentUser.email };
 
