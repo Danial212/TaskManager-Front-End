@@ -3,7 +3,7 @@ import { getTasks, createTask, updateTask, deleteTask, getCategories, createCate
 export {
     NULL_CATEGORY_TITLE, DomainURL, REFRESH_TOKEN, ACCESS_TOKEN, PRIORITY_BADGE, STATUS_LABEL, STATUS_LABEL_Array, PRIORITY_LABEL,
     GetStatusLabel, $, $$, fmtDate, sameDay, todayISO, getTextColor, getLuminance, taskDone, hexToRgb,
-    fetchState, getCachdData, saveStateIntoCache, fetchNewData, state, setCookies, getCookies, removeCookies,
+    fetchState, saveStateIntoCache, fetchNewData, state, setCookies, getCookies, removeCookies,
     getDayName, getMonthYear, getDaysInMonth, getFirstDayOfMonth,
     toast, loadSettings, value_label_pair
 }
@@ -77,7 +77,7 @@ function removeCookies() {
 }
 
 
-// #region Local Storage Managment
+// #region Local Storage Management
 
 function saveStateIntoCache(data, time) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -85,36 +85,64 @@ function saveStateIntoCache(data, time) {
     }));
 }
 
-async function cachedRawData_JSON() {
-    let cachData = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return cachData ?? await fetchNewData();
-}
-async function cachedRawData_user() {
-    return (await cachedRawData_JSON()).data.user;
-}
-async function cachedRawData_category() {
-    return (await cachedRawData_JSON()).data.categories;
-}
-async function cachedRawData_task() {
-    return (await cachedRawData_JSON()).data.tasks;
+function getCache() {
+    const cached = localStorage.getItem(STORAGE_KEY);
+    return cached ? JSON.parse(cached) : null;
 }
 
-//  Check if valid cache exist
-async function getCachdData() {
-    let cached = await cachedRawData_JSON();
+//#endregion
+
+// #region Fetch & API Interfaces
+/**
+ * The "Smart Gateway": Returns cache if valid, otherwise fetches.
+ */
+async function state() {
+    const cached = getCache();
 
     if (cached) {
         const { data, time } = cached;
-        const isValid = (Date.now() - time) < STORAGE_DURATION;
-        console.log('last update: ' + ((Date.now() - time)/1000) + ' secounds ago');
+        const ageInSec = (Date.now() - time) / 1000;
+        const isValid = ageInSec < (STORAGE_DURATION / 1000);
         
+        console.log(`Last update: ${ageInSec.toFixed(1)} seconds ago`);
 
-        if (isValid || IGNORE_REFRESH_FETCH)
+        if (isValid || IGNORE_REFRESH_FETCH) {
             return data;
+        }
     }
-    return null;
+    
+    return await fetchNewData();
 }
 
+/**
+ * The "Hammer": Ignores cache and hits the server.
+ */
+async function fetchNewData() {
+    // If IGNORE_REFRESH_FETCH is true, we still respect the cache if it exists
+    if (IGNORE_REFRESH_FETCH) {
+        const cached = getCache();
+        if (cached) return cached.data;
+    }
+
+    const data = await fetchState();
+    saveStateIntoCache(data, Date.now());
+    return data;
+}
+
+async function fetchState() {
+    // Parallel fetching is much faster than awaiting one by one
+    const [currentUser, categories, tasks] = await Promise.all([
+        getUser(),
+        getCategories(),
+        getTasks()
+    ]);
+
+    return {
+        user: { name: currentUser.username, email: currentUser.email },
+        categories,
+        tasks
+    };
+}
 
 //#endregion
 
@@ -159,47 +187,6 @@ function getLuminance(r, g, b) {
         return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
     });
     return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
-}
-
-//#endregion
-
-
-// #region Fetch & API Interfaces
-
-async function state() {
-    let data = await getCachdData()
-    if (data != null)
-        return data;
-    
-    data = await fetchNewData()
-    saveStateIntoCache(data, Date.now())
-    return data;
-}
-
-// Re-fetch all the data, even if they exist
-async function fetchNewData() {
-    if (IGNORE_REFRESH_FETCH)
-        return getCachdData()
-    const data = await fetchState();
-    saveStateIntoCache(data, Date.now())
-    return data;
-}
-
-let time = 0
-async function fetchState() {
-    let currentUser = await getUser(); // : await cachedRawData_user();
-    let categories = await getCategories(); // : await cachedRawData_category();
-    let tasks = await getTasks(); // : await cachedRawData_task();
-
-    let user = { name: currentUser.username, email: currentUser.email };
-
-    let data =
-    {
-        user,
-        categories,
-        tasks
-    };
-    return data;
 }
 
 //#endregion

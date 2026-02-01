@@ -2,8 +2,7 @@ import { getTasks, createTask, updateTask, deleteTask, getCategories, createCate
 import { settingsSectionTemplate, settingsSelectTemplate, settingsToggleTemplate, render_mono_category, render_mono_calander_day, taskItemTemplate, renderCategories, taskForm, openNewCategory,/* openEditTask, openNewTask,*/ closeModal, openModal, taskItemTemplate_complete, deleteConfirmMenu } from "./renderTemplates.js";
 import {
     PRIORITY_BADGE, STATUS_LABEL, STATUS_LABEL_Array, PRIORITY_LABEL, GetStatusLabel, $, $$, fmtDate, sameDay
-    , todayISO, getTextColor, taskDone, hexToRgb, getLuminance
-    , fetchState, getCachdData, saveStateIntoCache, fetchNewData, state,
+    , taskDone, saveStateIntoCache, fetchNewData, state,
     toast,
     NULL_CATEGORY_TITLE,
     saveSettings,

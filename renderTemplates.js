@@ -1,7 +1,7 @@
 import { re_RenderAll } from "./script.js";
 import {
   PRIORITY_BADGE, STATUS_LABEL, STATUS_LABEL_Array, PRIORITY_LABEL, GetStatusLabel, $, $$, fmtDate, todayISO, getTextColor
-  , fetchState, getCachdData, saveStateIntoCache, fetchNewData, state,
+  , fetchNewData, state,
   NULL_CATEGORY_TITLE,
 
 } from "./sharedData.js";
