@@ -1,19 +1,42 @@
 import { getAuthTokens, signup } from "./auth.js";
 
+// Dark Mode Toggle
+const themeToggle = document.getElementById('themeToggle');
+const html = document.documentElement;
+
+// Check for saved theme preference or default to light
+const currentTheme = localStorage.getItem('theme') || 'light';
+if (currentTheme === 'dark') {
+    html.classList.add('dark');
+}
+
+themeToggle.addEventListener('click', () => {
+    const isDark = html.classList.toggle('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+});
+
+tailwind.config = {
+    darkMode: 'class',
+    theme: {
+        extend: {},
+    }
+}
+
+
 // Page wide varible
 const loginForm = document.getElementById('loginForm');
 const signUpForm = document.getElementById('signUpForm')
 
-// Theme Toggle
-const themeToggle = document.getElementById('themeToggle');
-const html = document.documentElement;
+// // Theme Toggle
+// const themeToggle = document.getElementById('themeToggle');
+// const html = document.documentElement;
 
 
-// Check for saved theme preference or default to light mode
-const currentTheme = 'dark'; //localStorage.getItem('theme') || 'dark';
-if (currentTheme === 'dark') {
-    html.classList.add('dark');
-}
+// // Check for saved theme preference or default to light mode
+// const currentTheme = 'dark'; //localStorage.getItem('theme') || 'dark';
+// if (currentTheme === 'dark') {
+//     html.classList.add('dark');
+// }
 
 themeToggle.addEventListener('click', () => {
     html.classList.toggle('dark');

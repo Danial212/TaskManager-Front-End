@@ -15,27 +15,27 @@ import { createFilterPlaceholder, createSidebarPlaceholder, createStatPlaceholde
 export { re_RenderAll, fetchUpdate, renderAll, updateCategoryLocaly, deleteCategoryLocaly, createCategoryLocaly }
 
 // Tailwind config
-// if (tailwind != undefined) {
-//     tailwind.config = {
-//         darkMode: 'class',
-//         theme: {
-//             extend: {
-//                 colors: {
-//                     brand: {
-//                         50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc', 400: '#818cf8',
-//                         500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 800: '#3730a3', 900: '#312e81'
-//                     }
-//                 },
-//                 boxShadow: {
-//                     soft: '0 10px 25px -10px rgba(0,0,0,0.15)'
-//                 },
-//                 borderRadius: {
-//                     '2xl': '1.25rem'
-//                 }
-//             }
-//         }
-//     }
-// }
+if (tailwind != undefined) {
+    tailwind.config = {
+        darkMode: 'class',
+        theme: {
+            extend: {
+                colors: {
+                    brand: {
+                        50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc', 400: '#818cf8',
+                        500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 800: '#3730a3', 900: '#312e81'
+                    }
+                },
+                boxShadow: {
+                    soft: '0 10px 25px -10px rgba(0,0,0,0.15)'
+                },
+                borderRadius: {
+                    '2xl': '1.25rem'
+                }
+            }
+        }
+    }
+}
 
 /********************
  * Drag & Drop State
@@ -96,6 +96,8 @@ async function renderStats() {
 let currentStatusFilterBtn = $(`#filterAll`);
 const borderGlowClass = 'border-yellow-300'
 const borderGlowClass_dark = 'dark:border-yellow-600'
+currentStatusFilterBtn.classList.add(borderGlowClass)
+currentStatusFilterBtn.classList.add(borderGlowClass_dark);
 /**
  * @param filter Tasks status label (toDo, inProgress, .etc)
  */
@@ -108,24 +110,20 @@ async function renderTasks(filter = null) {
     if (q)
         items = items.filter(t => [t.title, t.description, t.tags?.join(' ')].join(' ').toLowerCase().includes(q));
 
-    if (filter) {
-        if (currentStatusFilterBtn) {
-            currentStatusFilterBtn.classList.remove(borderGlowClass);
-            currentStatusFilterBtn.classList.remove(borderGlowClass_dark);
-        }
 
-        if (filter !== 'all') {
-            items = items.filter(t => STATUS_LABEL[t.status] == filter);
-            currentStatusFilterBtn = $(`[data-filter="${filter}"]`);
-        }
-        else {
-            currentStatusFilterBtn = $(`#filterAll`);
-        }
-
-        currentStatusFilterBtn.classList.add(borderGlowClass)
-        currentStatusFilterBtn.classList.add(borderGlowClass_dark);
+    if (currentStatusFilterBtn) {
+        currentStatusFilterBtn.classList.remove(borderGlowClass);
+        currentStatusFilterBtn.classList.remove(borderGlowClass_dark);
     }
+    currentStatusFilterBtn = $(`#filterAll`);
+    if (filter && filter !== 'all') {
+        items = items.filter(t => STATUS_LABEL[t.status] == filter);
+        currentStatusFilterBtn = $(`[data-filter="${filter}"]`);
+    }
+    currentStatusFilterBtn.classList.add(borderGlowClass)
+    currentStatusFilterBtn.classList.add(borderGlowClass_dark);
 
+    
     const sort = $('#sortSelect').value;
     items.sort((a, b) => {
         if (sort === 'due_asc') return (new Date(a.reminder) - new Date(b.reminder));

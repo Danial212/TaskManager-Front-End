@@ -48,7 +48,7 @@ function GetStatusLabel(status) {
  * Data Layer
  ********************/
 const STORAGE_KEY = 'taskflow:v1';
-const STORAGE_DURATION = 10 * 1000; //  Cached expiration time in mili secound
+const STORAGE_DURATION = 5 * 60; //  Cached expiration time in secound
 
 // Complete cookie functions
 function setCookies(name, value, days = 7) {
@@ -102,7 +102,7 @@ async function state() {
     if (cached) {
         const { data, time } = cached;
         const ageInSec = (Date.now() - time) / 1000;
-        const isValid = ageInSec < (STORAGE_DURATION / 1000);
+        const isValid = ageInSec < (STORAGE_DURATION);
         
         console.log(`Last update: ${ageInSec.toFixed(1)} seconds ago`);
 
