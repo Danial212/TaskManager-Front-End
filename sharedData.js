@@ -34,7 +34,6 @@ function value_label_pair(dict) {
         dictionary[index++] = { value: value, label: dict[value] }
     };
 
-    console.log(dictionary);
     return dictionary
 }
 

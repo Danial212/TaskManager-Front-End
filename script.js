@@ -215,7 +215,7 @@ async function renderCalendar() {
         cell.addEventListener('dblclick', (e) => {
             e.stopPropagation();
             console.log('date sat at:', dayDate);
-            
+
             openNewTaskForDate(dayDate);
         });
 
@@ -304,8 +304,17 @@ async function renderMonthCalendar(year, month) {
             e.stopPropagation();
             const dateStr = this.getAttribute('data-date');
             if (dateStr) {
-                const date = new Date(dateStr + 'T00:00:00');
-                openNewTaskForDate(date);
+                const [year, month, day] = dateStr.split('-').map(Number);
+
+                // Create at LOCAL midnight using UTC methods to avoid timezone shifts
+                // Month is 0-indexed, so subtract 1
+                const date = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+
+                // Adjust for local timezone offset to get true local midnight
+                const timezoneOffsetMs = date.getTimezoneOffset() * 60 * 1000;
+                const localDate = new Date(date.getTime() - timezoneOffsetMs);
+
+                openNewTaskForDate(localDate);
             }
         });
 
@@ -717,6 +726,10 @@ async function initializeCalendar() {
 // Function to open new task modal with pre-filled date
 async function openNewTaskForDate(date = new Date()) {
     const data = await state();
+
+
+    console.log('we got data:', date);
+
 
     openModal({
         title: `New Task - ${fmtDate(date.toISOString())}`,
@@ -1542,7 +1555,7 @@ export async function renderTasksPanel() {
     initCategoryDropdown();
     await fillPanelsOption();
     // if (!hasWiredTaskPanel)
-        
+
     await listAllTasks();
 }
 

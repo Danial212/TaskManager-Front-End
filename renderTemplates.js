@@ -432,8 +432,6 @@ async function renderCategories() {
 }
 
 async function taskForm(t = {}) {
-  console.log('task form with status:', t.status);
-  
   let catOpts = (await state()).categories.map(c => `<option value="${c.id}" ${t.category === c.id ? 'selected' : ''}>${c.title}</option>`).join('');
   catOpts = `<option value="${NULL_CATEGORY_TITLE}" ${t.category ? '' : 'selected'}>No Category</option>` + catOpts
   const statusOpts = Object.entries(STATUS_LABEL).map(([label, value]) => `<option ${t.status === label ? 'selected' : ''} value="${label}">${value}</option>`).join('');
