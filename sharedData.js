@@ -103,8 +103,6 @@ async function state() {
         const { data, time } = cached;
         const ageInSec = (Date.now() - time) / 1000;
         const isValid = ageInSec < (STORAGE_DURATION);
-        
-        console.log(`Last update: ${ageInSec.toFixed(1)} seconds ago`);
 
         if (isValid || IGNORE_REFRESH_FETCH) {
             return data;
@@ -115,7 +113,7 @@ async function state() {
 }
 
 /**
- * The "Hammer": Ignores cache and hits the server.
+ * Ignores cache and hits the server ans save new fetched Data.
  */
 async function fetchNewData() {
     // If IGNORE_REFRESH_FETCH is true, we still respect the cache if it exists

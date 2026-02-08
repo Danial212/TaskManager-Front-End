@@ -1,5 +1,5 @@
 import { getTasks, createTask, updateTask, deleteTask, getCategories, createCategories, updateCategories } from "./utills.js";
-import { settingsSectionTemplate, settingsSelectTemplate, settingsToggleTemplate, render_mono_category, render_mono_calander_day, taskItemTemplate, renderCategories, taskForm, openNewCategory,/* openEditTask, openNewTask,*/ closeModal, openModal, taskItemTemplate_complete, deleteConfirmMenu } from "./renderTemplates.js";
+import { settingsSectionTemplate, settingsSelectTemplate, settingsToggleTemplate, render_mono_category, render_mono_calander_day, taskItemTemplate, renderCategories, taskForm, openNewCategory, closeModal, openModal, taskItemTemplate_complete, deleteConfirmMenu } from "./renderTemplates.js";
 import {
     PRIORITY_BADGE, STATUS_LABEL, STATUS_LABEL_Array, PRIORITY_LABEL, GetStatusLabel, $, $$, fmtDate, sameDay
     , taskDone, saveStateIntoCache, fetchNewData, state,
@@ -123,7 +123,7 @@ async function renderTasks(filter = null) {
     currentStatusFilterBtn.classList.add(borderGlowClass)
     currentStatusFilterBtn.classList.add(borderGlowClass_dark);
 
-    
+
     const sort = $('#sortSelect').value;
     items.sort((a, b) => {
         if (sort === 'due_asc') return (new Date(a.reminder) - new Date(b.reminder));
@@ -214,6 +214,8 @@ async function renderCalendar() {
         // double-click to create task
         cell.addEventListener('dblclick', (e) => {
             e.stopPropagation();
+            console.log('date sat at:', dayDate);
+            
             openNewTaskForDate(dayDate);
         });
 
@@ -1360,6 +1362,7 @@ function wireTasksPanel() {
                 break;
         }
     });
+    // hasWiredTaskPanel = true;
 }
 
 /**
@@ -1534,10 +1537,12 @@ async function listAllTasks() {
 /**
  * Initializes the tasks panel
  */
+// let hasWiredTaskPanel = false;
 export async function renderTasksPanel() {
     initCategoryDropdown();
     await fillPanelsOption();
-    wireTasksPanel();
+    // if (!hasWiredTaskPanel)
+        
     await listAllTasks();
 }
 
@@ -1741,7 +1746,6 @@ async function wire() {
             $('#searchInput')?.focus();
         }
         if (e.key.toLowerCase() === 'n' && !e.target.matches('input, textarea')) {
-            // openNewTask();
             openNewTaskForDate();
         }
         if (e.key.toLowerCase() === 'd' && !e.target.matches('input, textarea')) {
@@ -2092,25 +2096,12 @@ function setStatsLoading(containerSelector) {
     if (!container) {
         return;
     }
-    console.log('We have container', container);
-
 
     const boxes = container.querySelectorAll(".stat-box");
-    console.log('we have these boxes:', boxes);
-
 
     boxes.forEach(box => {
-
         box.dataset.original = box.innerHTML;
-        console.log('here we are at' + box);
-
         box.innerHTML = createStatPlaceholder();
-
-        // if (box.dataset.original) {
-        //     box.innerHTML = box.dataset.original;
-        //     delete box.dataset.original;
-        // }
-
     });
 }
 function clearStatsLoading(containerSelector) {
@@ -2212,5 +2203,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     await renderAll();
     await initializeCalendar();
     await wire();
+    wireTasksPanel();
 
 });
